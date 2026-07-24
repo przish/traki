@@ -28,7 +28,8 @@
           "image": "./assets/images/logos/traki-logo.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -19,7 +19,7 @@ export default function SignUp() {
 
       <View className="w-full gap-2">
         <View className="gap-1">
-          <Text className="text-[#AF2219]">email</Text>
+          <Text>Email</Text>
           <TextField/>
         </View>
 
@@ -83,7 +83,7 @@ export default function SignUp() {
         >
           {({ pressed }) => (
             <Text
-              className={`text-[#A13024] text-sm ${pressed ? "underline" : ""}`}
+              className={`text-[#AF2219] text-sm ${pressed ? "underline" : ""}`}
             >
               Already have an account?
             </Text>
