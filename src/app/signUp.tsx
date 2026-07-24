@@ -1,16 +1,15 @@
 import { useRouter } from "expo-router";
 import { Image, Pressable, Text, TextInput, View } from "react-native";
+import TextField from "../../components/text-field";
+import Continue from "../../components/continue";
+import Logo from "../../components/logo";
+import ORdivider from "../../components/ORdivider"
 
 export default function SignUp() {
   const router = useRouter();
   return (
     <View className="flex-1 pt-[84] items-center bg-white gap-4 p-10">
-      <View>
-        <Image
-          source={require("../.././assets/images/logos/traki-logo.png")}
-          className="w-[150] h-[150]"
-        />
-      </View>
+      <Logo/>
 
       <View>
         <Text className="text-[#A13024] text-xl font-bold">
@@ -21,23 +20,14 @@ export default function SignUp() {
       <View className="w-full gap-2">
         <View className="gap-1">
           <Text className="text-[#A13024]">email</Text>
-          <TextInput className="p-2 rounded-lg bg-[#AF221966] border border-solid border-[#A13024]" />
+          <TextField/>
         </View>
 
         <View className="gap-2">
-          <Pressable
-            className="p-2 rounded-lg bg-[#A13024]"
-            onPress={() => console.log("continue to password creation")}
-          >
-            <Text className="text-center text-white font-bold">Continue</Text>
-          </Pressable>
+          <Continue onPress={() => console.log("continue to password creation")}/>
         </View>
 
-        <View className="flex-row items-center">
-          <View className="bg-gray-400 flex-1 w-[50%] h-[1] mr-2" />
-          <Text>or</Text>
-          <View className="bg-gray-400 flex-1 w-[50%] h-[1] ml-2" />
-        </View>
+        <ORdivider/>
       </View>
 
       <View className="gap-2 w-full">
@@ -91,7 +81,13 @@ export default function SignUp() {
             router.push("./login");
           }}
         >
-          <Text className="text-[#A13024]">Already have an account?</Text>
+          {({ pressed }) => (
+            <Text
+              className={`text-[#A13024] text-sm ${pressed ? "underline" : ""}`}
+            >
+              Already have an account?
+            </Text>
+          )}
         </Pressable>
       </View>
     </View>
