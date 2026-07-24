@@ -12,14 +12,14 @@ export default function SignUp() {
       <Logo/>
 
       <View>
-        <Text className="text-[#A13024] text-xl font-bold">
+        <Text className="text-[#AF2219] text-xl font-bold">
           let's start with your email
         </Text>
       </View>
 
       <View className="w-full gap-2">
         <View className="gap-1">
-          <Text className="text-[#A13024]">email</Text>
+          <Text className="text-[#AF2219]">email</Text>
           <TextField/>
         </View>
 
@@ -32,7 +32,7 @@ export default function SignUp() {
 
       <View className="gap-2 w-full">
         <Pressable
-          className="flex-row justify-center gap-2 w-full border border-[#A13024] rounded-lg p-2"
+          className="flex-row justify-center gap-2 w-full border border-[#A13024] rounded-lg p-2 h-[36]"
           onPress={() => {
             console.log("google login API");
             // google pop up
@@ -46,7 +46,7 @@ export default function SignUp() {
         </Pressable>
 
         <Pressable
-          className="flex-row justify-center gap-2 w-full border border-[#A13024] rounded-lg p-2"
+          className="flex-row justify-center gap-2 w-full border border-[#A13024] rounded-lg p-2 h-[36]"
           onPress={() => {
             console.log("apple login API");
             // apple pop up
@@ -60,7 +60,7 @@ export default function SignUp() {
         </Pressable>
 
         <Pressable
-          className="flex-row justify-center gap-2 w-full border border-[#A13024] rounded-lg p-2"
+          className="flex-row justify-center gap-2 w-full border border-[#A13024] rounded-lg p-2 h-[36]"
           onPress={() => {
             console.log("stingray login API");
             // stingray pop up

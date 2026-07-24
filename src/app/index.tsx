@@ -41,7 +41,7 @@ export default function Index() {
 
         <View className="flex-2 mb-10">
           <Animated.Text
-            className="text-[#A13024] font-bold"
+            className="text-[#AF2219] font-bold"
             style={{ opacity: fadeAnimation }}
           >
             click anywhere to continue
