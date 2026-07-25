@@ -34,7 +34,7 @@ export default function PasswordCreation() {
                 autoCapitalize="none"
                 keyboardType="email-address"
                 placeholder="Enter your email address here"
-                placeholderTextColor="#AF2219B2"
+                placeholderTextColor="#AF22194D"
                 className="placeholder:font-black text-xl text-[#AF2219]"/>
                 <View className="h-[1] w-full bg-[#00000066] mt-2"/>
             </View>
