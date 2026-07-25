@@ -4,6 +4,7 @@ import TextField from "../../components/text-field";
 import Continue from "../../components/continue";
 import Logo from "../../components/logo";
 import ORdivider from "../../components/ORdivider"
+import LoginMethods from "../../components/LoginMethods";
 
 export default function SignUp() {
   const router = useRouter();
@@ -24,55 +25,16 @@ export default function SignUp() {
         </View>
 
         <View className="gap-2">
-          <Continue onPress={() => console.log("continue to password creation")}/>
+          <Continue onPress={() => {
+            console.log("continue to password creation")
+            router.push("./passwordCreation")
+          }}/>
         </View>
 
         <ORdivider/>
       </View>
 
-      <View className="gap-2 w-full">
-        <Pressable
-          className="flex-row justify-center gap-2 w-full border border-[#A13024] rounded-lg p-2 h-[36]"
-          onPress={() => {
-            console.log("google login API");
-            // google pop up
-          }}
-        >
-          <Image
-            source={require("../../assets/images/logos/google.png")}
-            className="w-5 h-5"
-          />
-          <Text className="text-center font-bold">Continue with Google</Text>
-        </Pressable>
-
-        <Pressable
-          className="flex-row justify-center gap-2 w-full border border-[#A13024] rounded-lg p-2 h-[36]"
-          onPress={() => {
-            console.log("apple login API");
-            // apple pop up
-          }}
-        >
-          <Image
-            source={require("../../assets/images/logos/apple-logo.png")}
-            className="w-5 h-5"
-          />
-          <Text className="text-center font-bold">Continue with Apple</Text>
-        </Pressable>
-
-        <Pressable
-          className="flex-row justify-center gap-2 w-full border border-[#A13024] rounded-lg p-2 h-[36]"
-          onPress={() => {
-            console.log("stingray login API");
-            // stingray pop up
-          }}
-        >
-          <Image
-            source={require("../../assets/images/logos/dev-logo.png")}
-            className="w-12 h-5"
-          />
-          <Text className="text-center font-bold">Continue with Stingray</Text>
-        </Pressable>
-      </View>
+      <LoginMethods/>
 
       <View className="mt-10">
         <Pressable

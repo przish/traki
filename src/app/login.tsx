@@ -5,6 +5,8 @@ import Continue from "../../components/continue";
 import { useRouter } from "expo-router";
 import React, {useState} from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import ORdivider from "../../components/ORdivider";
+import LoginMethods from "../../components/LoginMethods";
 
 export default function login() {
   const router = useRouter();
@@ -18,8 +20,14 @@ export default function login() {
   };
 
   return (
-    <View className="flex-1 pt-[84] items-center bg-white p-10">
+    <View className="flex-1 pt-[84] items-center bg-white p-10 gap-4">
       <Logo/>
+
+      <View>
+        <Text className="text-[#AF2219] text-xl font-bold">
+          Login
+        </Text>
+      </View>
 
       <View className="w-full gap-1 justify-center items-align">
         <Text>
@@ -44,6 +52,10 @@ export default function login() {
         </View>
 
         <Continue/>
+
+        <ORdivider/>
+
+        <LoginMethods/>
       </View>
 
       <View className="mt-10">
