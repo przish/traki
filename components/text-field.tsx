@@ -12,7 +12,7 @@ export default function TextField({
         secureTextEntry={password}
         autoCapitalize="none"
         keyboardType="email-address"
-        className="p-2 rounded-lg bg-[#AF221966] border border-solid border-[#A13024] h-[36]" 
+        className="p-2 rounded-lg bg-[#AF221966] border border-solid border-[#A13024] h-[36] w-full" 
         {...props}
         />
     )
