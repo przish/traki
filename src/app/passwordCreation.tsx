@@ -1,4 +1,4 @@
-import { View, Text, TextInput } from "react-native"
+import { View, Text, TextInput, Pressable } from "react-native"
 import React, { useState} from "react"
 import Continue from "../../components/continue";
 
@@ -39,7 +39,17 @@ export default function PasswordCreation() {
                 <View className="h-[1] w-full bg-[#00000066] mt-2"/>
             </View>
 
-            <Continue />
+            <View className="px-5 mt-5">
+                 <Pressable
+                    className="p-2 rounded-lg bg-[#AF2219] h-[36] justify-center"
+                      onPress={() => {(
+                        console.log("link sent")
+                        // sent link pero let'
+                    )}}
+                  >
+                    <Text className="text-center text-white font-bold">Send the link</Text>
+                </Pressable>
+            </View>
         </View>
     )
 }

@@ -696,3 +696,90 @@
 {"_e":"metro:client_log","_t":1784969896034,"level":"log","data":["login pressed"]}
 {"_e":"metro:client_log","_t":1784969907519,"level":"log","data":["account creation pressed"]}
 {"_e":"metro:client_log","_t":1784969913585,"level":"log","data":["continue to password creation"]}
+{"_e":"root:init","_t":1785051487426,"format":"v0-jsonl","version":"57.0.10"}
+{"_e":"env:mode","_t":1785051487426,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1785051487428,"mode":"development","files":[],"env":{}}
+{"_e":"devserver:start","_t":1785051487665,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../../../src/app","serverComponents":false,"serverActions":false,"serverRendering":true,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1785051488020,"serverRoot":"../../..","projectRoot":"../../..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":true,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1785051488113,"plugins":[]}
+{"_e":"metro:instantiate","_t":1785051488493,"atlas":false,"workers":7,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1785051504221,"id":"2","platform":"ios","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1785051504221,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785051504239,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785051505391,"id":"2","progress":0.010000000000000002,"total":1,"current":1}
+{"_e":"metro:bundling:progress","_t":1785051505493,"id":"2","progress":0.09,"total":10,"current":3}
+{"_e":"metro:bundling:progress","_t":1785051505687,"id":"2","progress":0.16000000000000003,"total":10,"current":4}
+{"_e":"metro:bundling:progress","_t":1785051505839,"id":"2","progress":0.16000000000000003,"total":16,"current":4}
+{"_e":"metro:bundling:progress","_t":1785051506005,"id":"2","progress":0.16000000000000003,"total":16,"current":5}
+{"_e":"metro:bundling:progress","_t":1785051506107,"id":"2","progress":0.16000000000000003,"total":17,"current":5}
+{"_e":"metro:bundling:progress","_t":1785051506413,"id":"2","progress":0.16000000000000003,"total":17,"current":6}
+{"_e":"metro:bundling:progress","_t":1785051506512,"id":"2","progress":0.1890359168241966,"total":23,"current":10}
+{"_e":"metro:bundling:progress","_t":1785051506613,"id":"2","progress":0.1890359168241966,"total":70,"current":12}
+{"_e":"metro:bundling:progress","_t":1785051506745,"id":"2","progress":0.1890359168241966,"total":70,"current":13}
+{"_e":"metro:bundling:progress","_t":1785051506858,"id":"2","progress":0.1890359168241966,"total":174,"current":18}
+{"_e":"metro:bundling:progress","_t":1785051506961,"id":"2","progress":0.1890359168241966,"total":175,"current":20}
+{"_e":"metro:bundling:progress","_t":1785051507067,"id":"2","progress":0.1890359168241966,"total":176,"current":22}
+{"_e":"metro:bundling:progress","_t":1785051507211,"id":"2","progress":0.1890359168241966,"total":176,"current":23}
+{"_e":"metro:bundling:progress","_t":1785051507317,"id":"2","progress":0.1890359168241966,"total":195,"current":25}
+{"_e":"metro:bundling:progress","_t":1785051507404,"id":"2","progress":0.1890359168241966,"total":195,"current":26}
+{"_e":"metro:bundling:progress","_t":1785051507505,"id":"2","progress":0.1890359168241966,"total":210,"current":30}
+{"_e":"metro:bundling:progress","_t":1785051507608,"id":"2","progress":0.1890359168241966,"total":226,"current":38}
+{"_e":"metro:bundling:progress","_t":1785051507711,"id":"2","progress":0.1890359168241966,"total":251,"current":53}
+{"_e":"metro:bundling:progress","_t":1785051507812,"id":"2","progress":0.1890359168241966,"total":258,"current":63}
+{"_e":"metro:bundling:progress","_t":1785051507919,"id":"2","progress":0.1890359168241966,"total":260,"current":72}
+{"_e":"metro:bundling:progress","_t":1785051508019,"id":"2","progress":0.1890359168241966,"total":272,"current":81}
+{"_e":"metro:bundling:progress","_t":1785051508122,"id":"2","progress":0.1890359168241966,"total":286,"current":91}
+{"_e":"metro:bundling:progress","_t":1785051508222,"id":"2","progress":0.1890359168241966,"total":290,"current":96}
+{"_e":"metro:bundling:progress","_t":1785051508327,"id":"2","progress":0.1890359168241966,"total":305,"current":111}
+{"_e":"metro:bundling:progress","_t":1785051508432,"id":"2","progress":0.1890359168241966,"total":343,"current":142}
+{"_e":"metro:bundling:progress","_t":1785051508533,"id":"2","progress":0.254016,"total":375,"current":189}
+{"_e":"metro:bundling:progress","_t":1785051508632,"id":"2","progress":0.30410406258836836,"total":515,"current":284}
+{"_e":"metro:bundling:progress","_t":1785051508732,"id":"2","progress":0.34363852556480373,"total":551,"current":323}
+{"_e":"metro:bundling:progress","_t":1785051508832,"id":"2","progress":0.3851038680146873,"total":564,"current":350}
+{"_e":"metro:bundling:progress","_t":1785051508940,"id":"2","progress":0.4285080505540166,"total":608,"current":398}
+{"_e":"metro:bundling:progress","_t":1785051509034,"id":"2","progress":0.4391058208738569,"total":664,"current":440}
+{"_e":"metro:bundling:progress","_t":1785051509135,"id":"2","progress":0.4717885930007142,"total":693,"current":476}
+{"_e":"metro:bundling:progress","_t":1785051509236,"id":"2","progress":0.4717885930007142,"total":785,"current":518}
+{"_e":"metro:bundling:progress","_t":1785051509336,"id":"2","progress":0.47876085027583815,"total":805,"current":557}
+{"_e":"metro:bundling:progress","_t":1785051509436,"id":"2","progress":0.5082365574812912,"total":829,"current":591}
+{"_e":"metro:bundling:progress","_t":1785051509538,"id":"2","progress":0.5804988662131518,"total":840,"current":640}
+{"_e":"metro:bundling:progress","_t":1785051509638,"id":"2","progress":0.6169522367095515,"total":853,"current":670}
+{"_e":"metro:bundling:progress","_t":1785051509738,"id":"2","progress":0.6525090459708119,"total":874,"current":706}
+{"_e":"metro:bundling:progress","_t":1785051509838,"id":"2","progress":0.6603775376042453,"total":918,"current":746}
+{"_e":"metro:bundling:progress","_t":1785051509938,"id":"2","progress":0.6603775376042453,"total":978,"current":786}
+{"_e":"metro:bundling:progress","_t":1785051510039,"id":"2","progress":0.6884425956351912,"total":1016,"current":843}
+{"_e":"metro:bundling:progress","_t":1785051510140,"id":"2","progress":0.7169742076598994,"total":1044,"current":884}
+{"_e":"metro:bundling:progress","_t":1785051510241,"id":"2","progress":0.736749443469243,"total":1073,"current":921}
+{"_e":"metro:bundling:progress","_t":1785051510342,"id":"2","progress":0.7565626414775823,"total":1083,"current":942}
+{"_e":"metro:bundling:progress","_t":1785051510461,"id":"2","progress":0.7565626414775823,"total":1101,"current":957}
+{"_e":"metro:bundling:progress","_t":1785051510562,"id":"2","progress":0.7732393241222995,"total":1152,"current":1013}
+{"_e":"metro:bundling:progress","_t":1785051510662,"id":"2","progress":0.7893013108005332,"total":1201,"current":1067}
+{"_e":"metro:bundling:progress","_t":1785051510762,"id":"2","progress":0.847858053132046,"total":1212,"current":1116}
+{"_e":"metro:bundling:progress","_t":1785051510862,"id":"2","progress":0.8924022851604267,"total":1229,"current":1161}
+{"_e":"metro:bundling:progress","_t":1785051510962,"id":"2","progress":0.901752123504247,"total":1270,"current":1206}
+{"_e":"metro:bundling:progress","_t":1785051511066,"id":"2","progress":0.901752123504247,"total":1336,"current":1268}
+{"_e":"metro:bundling:progress","_t":1785051511168,"id":"2","progress":0.901752123504247,"total":1421,"current":1308}
+{"_e":"metro:bundling:progress","_t":1785051511292,"id":"2","progress":0.901752123504247,"total":1438,"current":1324}
+{"_e":"metro:bundling:progress","_t":1785051511394,"id":"2","progress":0.901752123504247,"total":1463,"current":1378}
+{"_e":"metro:bundling:progress","_t":1785051511494,"id":"2","progress":0.901752123504247,"total":1503,"current":1412}
+{"_e":"metro:bundling:progress","_t":1785051511594,"id":"2","progress":0.901752123504247,"total":1530,"current":1445}
+{"_e":"metro:bundling:progress","_t":1785051511694,"id":"2","progress":0.901752123504247,"total":1552,"current":1462}
+{"_e":"metro:bundling:progress","_t":1785051511794,"id":"2","progress":0.901752123504247,"total":1572,"current":1490}
+{"_e":"metro:bundling:progress","_t":1785051511894,"id":"2","progress":0.9066872354732803,"total":1590,"current":1514}
+{"_e":"metro:bundling:progress","_t":1785051511995,"id":"2","progress":0.9151429651626982,"total":1591,"current":1522}
+{"_e":"metro:bundling:progress","_t":1785051512095,"id":"2","progress":0.9264963739146292,"total":1602,"current":1542}
+{"_e":"metro:bundling:progress","_t":1785051512195,"id":"2","progress":0.9446433290045294,"total":1603,"current":1558}
+{"_e":"metro:bundling:progress","_t":1785051512296,"id":"2","progress":0.9570207307689491,"total":1611,"current":1576}
+{"_e":"metro:bundling:progress","_t":1785051512397,"id":"2","progress":0.9623477676727086,"total":1631,"current":1600}
+{"_e":"metro:bundling:progress","_t":1785051512497,"id":"2","progress":0.9623477676727086,"total":1650,"current":1611}
+{"_e":"metro:bundling:progress","_t":1785051512598,"id":"2","progress":0.9693775590169853,"total":1685,"current":1659}
+{"_e":"metro:bundling:progress","_t":1785051512698,"id":"2","progress":0.9693775590169853,"total":1721,"current":1691}
+{"_e":"metro:bundling:progress","_t":1785051512817,"id":"2","progress":0.999,"total":1733,"current":1733}
+{"_e":"metro:bundling:done","_t":1785051513499,"id":"2","total":1733,"ms":9277.672417}
+{"_e":"metro:client_log","_t":1785051518570,"level":"log","data":["continue pressed"]}
+{"_e":"metro:client_log","_t":1785051523951,"level":"log","data":["continue to password creation"]}
+{"_e":"metro:client_log","_t":1785051561892,"level":"error","data":["[ReferenceError: Property 'Pressable' doesn't exist]","\n\n\u001b[1mCode: passwordCreation.tsx\u001b[22m\n\u001b[0m \u001b[90m 41 |\u001b[39m\n \u001b[90m 42 |\u001b[39m             \u001b[33m<\u001b[39m\u001b[33mView\u001b[39m\u001b[33m>\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 43 |\u001b[39m                  \u001b[33m<\u001b[39m\u001b[33mPressable\u001b[39m\n \u001b[90m    |\u001b[39m                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 44 |\u001b[39m                             className\u001b[33m=\u001b[39m\u001b[32m\"p-2 rounded-lg bg-[#AF2219] h-[36] justify-center\"\u001b[39m\n \u001b[90m 45 |\u001b[39m                       onPress\u001b[33m=\u001b[39m{onPress}\n \u001b[90m 46 |\u001b[39m                           \u001b[33m>\u001b[39m\u001b[0m\n\u001b[1mCall Stack\u001b[22m\n\u001b[90m  PasswordCreation (\u001b]8;;src/app/passwordCreation.tsx:43:19\u0007src/app/passwordCreation.tsx:43:19\u001b]8;;\u0007)\u001b[39m","\n\n\u001b[1mCode: _layout.tsx\u001b[22m\n\u001b[0m \u001b[90m 3 |\u001b[39m\n \u001b[90m 4 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36mdefault\u001b[39m \u001b[36mfunction\u001b[39m \u001b[33mRootLayout\u001b[39m() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 5 |\u001b[39m   \u001b[36mreturn\u001b[39m \u001b[33m<\u001b[39m\u001b[33mStack\u001b[39m screenOptions\u001b[33m=\u001b[39m{{ headerShown\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m\u001b[33m,\u001b[39m animation\u001b[33m:\u001b[39m \u001b[32m\"none\"\u001b[39m }} \u001b[33m/\u001b[39m\u001b[33m>\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 6 |\u001b[39m }\n \u001b[90m 7 |\u001b[39m\u001b[0m\n\u001b[1mCall Stack\u001b[22m\n\u001b[90m  RootLayout (\u001b]8;;src/app/_layout.tsx:5:10\u0007src/app/_layout.tsx:5:10\u001b]8;;\u0007)\u001b[39m"]}
+{"_e":"metro:bundling:failed","_t":1785051619610,"id":null,"message":"SyntaxError: /Users/irishpureza/Downloads/web-projects/traki/src/app/passwordCreation.tsx: Unexpected token (45:37)\n\n  43 |                  <Pressable\n  44 |                     className=\"p-2 rounded-lg bg-[#AF2219] h-[36] justify-center\"\n> 45 |                       onPress={() => }\n     |                                      ^\n  46 |                   >\n  47 |                     <Text className=\"text-center text-white font-bold\">Sent the link</Text>\n  48 |                 </Pressable>","importStack":null,"filename":"src/app/passwordCreation.tsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:bundling:failed","_t":1785051620610,"id":null,"message":"SyntaxError: /Users/irishpureza/Downloads/web-projects/traki/src/app/passwordCreation.tsx: Unexpected token (45:37)\n\n  43 |                  <Pressable\n  44 |                     className=\"p-2 rounded-lg bg-[#AF2219] h-[36] justify-center\"\n> 45 |                       onPress={() => }\n     |                                      ^\n  46 |                   >\n  47 |                     <Text className=\"text-center text-white font-bold\">Sent the link</Text>\n  48 |                 </Pressable>","importStack":null,"filename":"src/app/passwordCreation.tsx","targetModuleName":null,"originModulePath":null}
+{"_e":"metro:client_log","_t":1785051663416,"level":"log","data":["continue pressed"]}
+{"_e":"metro:client_log","_t":1785051800261,"level":"log","data":["continue to password creation"]}
