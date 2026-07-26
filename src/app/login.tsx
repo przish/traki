@@ -29,28 +29,44 @@ export default function login() {
         </Text>
       </View>
 
-      <View className="w-full gap-1 justify-center items-align">
-        <Text>
-          Email, username, or phone number
-        </Text>
-
-        <TextField/>
-
-        <Text>
-          password
-        </Text>
-
-        <TextField secureTextEntry={!showPassword} value={password} onChangeText={setPassword}/>
-
-        <View className="items-end pr-2">
-          <MaterialCommunityIcons
-            name={showPassword ? "eye-off" : "eye"}
-            onPress={toggleShowPassword}
-            size={24}
-            color={'#AF2219'}
-          />
+      <View className="w-full gap-2 justify-center items-align">
+        <View className="gap-1">
+            <Text>
+            Email, username, or phone number
+          </Text>
+          <TextField/>
         </View>
 
+        <View className="gap-1">
+          <Text>
+            password
+          </Text>
+
+          <View className="flex-row gap-2 pr-10">
+            <TextField secureTextEntry={!showPassword} value={password} onChangeText={setPassword}/>
+
+            <View className="items-end justify-center">
+              <MaterialCommunityIcons
+                name={showPassword ? "eye-off" : "eye"}
+                onPress={toggleShowPassword}
+                size={24}
+                color={'#AF2219'}
+              />
+            </View>
+          </View>
+        </View>
+
+        <View className="items-center">
+          <Pressable onPress={() => {
+            console.log("reset password");
+            router.push("./resetPassword");
+          }}>
+            <Text className="text-sm text-[#AF2219]">
+              Forgot password?
+            </Text>
+          </Pressable>
+        </View>
+        
         <Continue/>
 
         <ORdivider/>
