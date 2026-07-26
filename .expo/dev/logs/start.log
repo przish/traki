@@ -783,3 +783,29 @@
 {"_e":"metro:bundling:failed","_t":1785051620610,"id":null,"message":"SyntaxError: /Users/irishpureza/Downloads/web-projects/traki/src/app/passwordCreation.tsx: Unexpected token (45:37)\n\n  43 |                  <Pressable\n  44 |                     className=\"p-2 rounded-lg bg-[#AF2219] h-[36] justify-center\"\n> 45 |                       onPress={() => }\n     |                                      ^\n  46 |                   >\n  47 |                     <Text className=\"text-center text-white font-bold\">Sent the link</Text>\n  48 |                 </Pressable>","importStack":null,"filename":"src/app/passwordCreation.tsx","targetModuleName":null,"originModulePath":null}
 {"_e":"metro:client_log","_t":1785051663416,"level":"log","data":["continue pressed"]}
 {"_e":"metro:client_log","_t":1785051800261,"level":"log","data":["continue to password creation"]}
+{"_e":"root:init","_t":1785081867138,"format":"v0-jsonl","version":"57.0.10"}
+{"_e":"env:mode","_t":1785081867139,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1785081867140,"mode":"development","files":[],"env":{}}
+{"_e":"devserver:start","_t":1785081867423,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../../../src/app","serverComponents":false,"serverActions":false,"serverRendering":true,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1785081867786,"serverRoot":"../../..","projectRoot":"../../..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":true,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1785081867885,"plugins":[]}
+{"_e":"metro:instantiate","_t":1785081868220,"atlas":false,"workers":7,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1785081870079,"id":"2","platform":"ios","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1785081870079,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785081870082,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1785081870182,"id":"2","progress":0.18367346938775508,"total":448,"current":192}
+{"_e":"metro:bundling:progress","_t":1785081870282,"id":"2","progress":0.3878147573248925,"total":888,"current":553}
+{"_e":"metro:bundling:progress","_t":1785081870382,"id":"2","progress":0.8352370510396975,"total":1150,"current":1051}
+{"_e":"metro:bundling:progress","_t":1785081870482,"id":"2","progress":0.8835018304030978,"total":1532,"current":1440}
+{"_e":"metro:bundling:progress","_t":1785081870582,"id":"2","progress":0.9988462648782718,"total":1733,"current":1732}
+{"_e":"metro:bundling:progress","_t":1785081870812,"id":"2","progress":0.999,"total":1733,"current":1733}
+{"_e":"metro:bundling:done","_t":1785081870870,"id":"2","total":1733,"ms":791.117916}
+{"_e":"metro:client_log","_t":1785081872107,"level":"log","data":["continue pressed"]}
+{"_e":"metro:client_log","_t":1785081874733,"level":"log","data":["continue to password creation"]}
+{"_e":"metro:client_log","_t":1785082001247,"level":"warn","data":["Route \"./passCreate.tsx\" is missing the required default export. Ensure a React component is exported as default."]}
+{"_e":"metro:client_log","_t":1785082266727,"level":"log","data":["continue pressed"]}
+{"_e":"metro:client_log","_t":1785082268693,"level":"log","data":["login pressed"]}
+{"_e":"metro:client_log","_t":1785082271693,"level":"log","data":["reset password"]}
+{"_e":"metro:bundling:started","_t":1785082275111,"id":"k","platform":"ios","environment":null,"entry":"node_modules/expo-router/entry.js"}
+{"_e":"metro:bundling:progress","_t":1785082275111,"id":"k","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1785082275159,"id":"k","total":1,"ms":48.303625}
