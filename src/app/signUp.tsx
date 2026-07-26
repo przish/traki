@@ -27,7 +27,7 @@ export default function SignUp() {
         <View className="gap-2">
           <Continue onPress={() => {
             console.log("continue to password creation")
-            router.push("./passwordCreation")
+            router.push("./passCreate")
           }}/>
         </View>
 
