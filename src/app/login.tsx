@@ -20,7 +20,7 @@ export default function login() {
   };
 
   return (
-    <View className="flex-1 pt-[84] items-center bg-white p-10 gap-4">
+    <View className="flex-1 items-center bg-white p-10 gap-4">
       <Logo/>
 
       <View>

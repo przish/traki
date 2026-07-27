@@ -9,7 +9,7 @@ import LoginMethods from "../../components/LoginMethods";
 export default function SignUp() {
   const router = useRouter();
   return (
-    <View className="flex-1 pt-[84] items-center bg-white gap-4 p-10">
+    <View className="flex-1 items-center bg-white gap-4 p-10">
       <Logo/>
 
       <View>
