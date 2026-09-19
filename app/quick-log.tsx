@@ -16,6 +16,14 @@ export default function QuickLogModal() {
   const [selectedCatId, setSelectedCatId] = useState(categories[0]?.id ?? "c_food");
   const [note, setNote] = useState("Quick Expense");
 
+  const handleClose = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  };
+
   const handleKeyPress = (val: string) => {
     try {
       Haptics.selectionAsync();
@@ -41,7 +49,7 @@ export default function QuickLogModal() {
     } catch {}
 
     await logTransaction(amountStr, selectedCatId, selectedWalletId, note);
-    router.back();
+    handleClose();
   };
 
   const KEYPAD = [
@@ -62,7 +70,7 @@ export default function QuickLogModal() {
           <Text className="text-base font-black text-foreground">3-Sec Quick Log</Text>
         </View>
         <Pressable
-          onPress={() => router.back()}
+          onPress={handleClose}
           className="h-8 w-8 rounded-full bg-surface border border-border items-center justify-center"
         >
           <MaterialIcons name="close" size={18} color={colors.muted} />
@@ -70,8 +78,8 @@ export default function QuickLogModal() {
       </View>
 
       {/* Amount Display */}
-      <View className="py-6 items-center">
-        <Text className="text-xs font-bold uppercase tracking-widest text-muted mb-1">
+      <View className="py-5 items-center">
+        <Text className="text-[10px] font-extrabold uppercase tracking-widest text-muted mb-1">
           Amount to Log & Strike
         </Text>
         <View className="flex-row items-baseline gap-1">
