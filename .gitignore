@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.pnpm-store
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# SQLite databases (Never commit local database files)
+*.db
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# Native builds
+android/
+ios/
+
+# Environment / keys
+.env
+.env.*
+*.pem
+
+# macOS
+.DS_Store
+*.swp
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Manus legacy staging
+manus_traki-mobile/
