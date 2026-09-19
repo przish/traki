@@ -85,7 +85,7 @@ export default function VaultScreen() {
 
   return (
     <ScreenContainer className="px-4 pt-2">
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
         <View className="py-3 mb-2 flex-row justify-between items-center">
           <View>

@@ -20,7 +20,7 @@ export default function TrackerScreen() {
 
   return (
     <ScreenContainer className="px-4 pt-2">
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header with Net Worth */}
         <View className="flex-row items-center justify-between py-3 mb-2">
           <View>
