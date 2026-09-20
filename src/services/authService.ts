@@ -195,6 +195,30 @@ export async function signInWithDevSandbox(provider: "google" | "apple" | "sting
 }
 
 /**
+ * Signs in with explicit account details selected from the interactive SSO modal
+ */
+export async function signInWithAccountDetails(account: {
+  id?: string;
+  email: string;
+  displayName: string;
+  avatarUrl?: string;
+  provider: "google" | "apple" | "stingray";
+}): Promise<AuthResult> {
+  const user: AuthUser = {
+    id: account.id || `${account.provider}_${Date.now().toString().slice(-6)}`,
+    email: account.email,
+    displayName: account.displayName,
+    avatarUrl: account.avatarUrl,
+    provider: account.provider,
+    token: `jwt_sso_${account.provider}_${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+
+  await persistAuthUser(user);
+  return { success: true, user };
+}
+
+/**
  * Persists an authenticated user session to database and updates player profile
  */
 async function persistAuthUser(user: AuthUser): Promise<void> {

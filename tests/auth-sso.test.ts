@@ -15,6 +15,7 @@ vi.mock("expo-web-browser", () => ({
 
 import {
   signInWithDevSandbox,
+  signInWithAccountDetails,
   getCurrentAuthUser,
   signOutUser,
   signInWithApple,
@@ -51,6 +52,22 @@ describe("Single Sign-On (SSO) Authentication Suite", () => {
       expect(result.user).toBeDefined();
       expect(result.user?.provider).toBe("google");
     });
+
+    it("signs in with user-selected Google account details from interactive SSO modal", async () => {
+      const result = await signInWithAccountDetails({
+        email: "irishpureza@gmail.com",
+        displayName: "Irish Pureza",
+        provider: "google",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.user?.email).toBe("irishpureza@gmail.com");
+      expect(result.user?.displayName).toBe("Irish Pureza");
+      expect(result.user?.provider).toBe("google");
+
+      const profile = await TrakiStorage.getProfile();
+      expect(profile.partner_name).toBe("Irish");
+    });
   });
 
   describe("Apple SSO", () => {
@@ -72,6 +89,19 @@ describe("Single Sign-On (SSO) Authentication Suite", () => {
 
       expect(result.success).toBe(true);
       expect(result.user).toBeDefined();
+      expect(result.user?.provider).toBe("apple");
+    });
+
+    it("signs in with Apple Private Relay selection from interactive SSO modal", async () => {
+      const result = await signInWithAccountDetails({
+        email: "irish.relay@privaterelay.appleid.com",
+        displayName: "Irish Pureza",
+        provider: "apple",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.user?.email).toBe("irish.relay@privaterelay.appleid.com");
+      expect(result.user?.displayName).toBe("Irish Pureza");
       expect(result.user?.provider).toBe("apple");
     });
 

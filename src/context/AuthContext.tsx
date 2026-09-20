@@ -6,6 +6,7 @@ import {
   signInWithApple as serviceSignInApple,
   signInWithGoogle as serviceSignInGoogle,
   signInWithDevSandbox,
+  signInWithAccountDetails,
   signOutUser,
 } from "../services/authService";
 
@@ -17,6 +18,13 @@ interface AuthContextType {
   signInWithGoogle: (options?: { allowSandbox?: boolean }) => Promise<AuthResult>;
   signInWithApple: (options?: { allowSandbox?: boolean }) => Promise<AuthResult>;
   signInWithSandbox: (provider: AuthProviderType) => Promise<AuthResult>;
+  signInWithCustomAccount: (account: {
+    id?: string;
+    email: string;
+    displayName: string;
+    avatarUrl?: string;
+    provider: "google" | "apple" | "stingray";
+  }) => Promise<AuthResult>;
   signOut: () => Promise<void>;
   clearError: () => void;
 }
@@ -103,6 +111,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const signInWithCustomAccount = useCallback(
+    async (account: {
+      id?: string;
+      email: string;
+      displayName: string;
+      avatarUrl?: string;
+      provider: "google" | "apple" | "stingray";
+    }): Promise<AuthResult> => {
+      setIsAuthenticating(true);
+      setError(null);
+      try {
+        const result = await signInWithAccountDetails(account);
+        if (result.success && result.user) {
+          setUser(result.user);
+        }
+        return result;
+      } finally {
+        setIsAuthenticating(false);
+      }
+    },
+    []
+  );
+
   const signOut = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     try {
@@ -123,6 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signInWithGoogle,
         signInWithApple,
         signInWithSandbox,
+        signInWithCustomAccount,
         signOut,
         clearError,
       }}

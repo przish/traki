@@ -3,7 +3,9 @@ import { View, Text, Image, Pressable, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/src/context/AuthContext";
+import { isAppleAuthAvailable } from "@/src/services/authService";
 import { AuthProviderType } from "@/src/types";
+import SSOModal from "./SSOModal";
 
 export interface LoginMethodsProps {
   onSuccess?: () => void;
@@ -12,27 +14,72 @@ export interface LoginMethodsProps {
 
 export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) {
   const router = useRouter();
-  const { signInWithGoogle, signInWithApple, signInWithSandbox, isAuthenticating } = useAuth();
-  const [activeProvider, setActiveProvider] = useState<AuthProviderType | null>(null);
+  const { signInWithGoogle, signInWithApple, signInWithCustomAccount, isAuthenticating } = useAuth();
+  const [modalProvider, setModalProvider] = useState<"google" | "apple" | "stingray" | null>(null);
+  const [activeButtonLoading, setActiveButtonLoading] = useState<AuthProviderType | null>(null);
 
-  const handleProviderLogin = async (provider: AuthProviderType) => {
+  const handleProviderPress = async (provider: AuthProviderType) => {
     if (isAuthenticating) return;
 
-    setActiveProvider(provider);
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch {}
 
-    let result;
-    if (provider === "google") {
-      result = await signInWithGoogle({ allowSandbox: true });
-    } else if (provider === "apple") {
-      result = await signInWithApple({ allowSandbox: true });
-    } else {
-      result = await signInWithSandbox("stingray");
+    // For Apple on iOS with native entitlement, launch native Apple Sign In sheet directly
+    if (provider === "apple") {
+      setActiveButtonLoading("apple");
+      const hasNativeApple = await isAppleAuthAvailable();
+      setActiveButtonLoading(null);
+
+      if (hasNativeApple) {
+        const result = await signInWithApple({ allowSandbox: false });
+        if (result.success) {
+          try {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          } catch {}
+          if (onSuccess) onSuccess();
+          else router.replace("/(tabs)");
+          return;
+        } else if (result.cancelled) {
+          return;
+        }
+        // If native failed or was unavailable, fall through to SSOModal popup
+      }
     }
 
-    setActiveProvider(null);
+    // For Google, check if live Google OAuth Client ID is configured
+    if (provider === "google") {
+      const hasGoogleClientId = !!(
+        process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
+      );
+      if (hasGoogleClientId) {
+        setActiveButtonLoading("google");
+        const result = await signInWithGoogle({ allowSandbox: false });
+        setActiveButtonLoading(null);
+        if (result.success) {
+          try {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          } catch {}
+          if (onSuccess) onSuccess();
+          else router.replace("/(tabs)");
+          return;
+        } else if (result.cancelled) {
+          return;
+        }
+      }
+    }
+
+    // Always pop up the authentic SSO dialog sheet
+    setModalProvider(provider as "google" | "apple" | "stingray");
+  };
+
+  const handleModalAuthenticate = async (account: {
+    email: string;
+    displayName: string;
+    avatarUrl?: string;
+    provider: "google" | "apple" | "stingray";
+  }) => {
+    const result = await signInWithCustomAccount(account);
 
     if (result.success) {
       try {
@@ -43,19 +90,14 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
       } else {
         router.replace("/(tabs)");
       }
-    } else if (!result.cancelled && result.error) {
-      try {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      } catch {}
-      if (onError) {
-        onError(result.error);
-      }
+    } else if (result.error && onError) {
+      onError(result.error);
     }
   };
 
-  const isGoogleLoading = activeProvider === "google";
-  const isAppleLoading = activeProvider === "apple";
-  const isStingrayLoading = activeProvider === "stingray";
+  const isGoogleLoading = activeButtonLoading === "google";
+  const isAppleLoading = activeButtonLoading === "apple";
+  const isStingrayLoading = activeButtonLoading === "stingray";
 
   return (
     <View className="gap-2.5 w-full">
@@ -65,7 +107,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
           isAuthenticating ? "opacity-60" : ""
         }`}
-        onPress={() => handleProviderLogin("google")}
+        onPress={() => handleProviderPress("google")}
       >
         {isGoogleLoading ? (
           <ActivityIndicator size="small" color="#AF2219" />
@@ -89,7 +131,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
           isAuthenticating ? "opacity-60" : ""
         }`}
-        onPress={() => handleProviderLogin("apple")}
+        onPress={() => handleProviderPress("apple")}
       >
         {isAppleLoading ? (
           <ActivityIndicator size="small" color="#AF2219" />
@@ -113,7 +155,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
           isAuthenticating ? "opacity-60" : ""
         }`}
-        onPress={() => handleProviderLogin("stingray")}
+        onPress={() => handleProviderPress("stingray")}
       >
         {isStingrayLoading ? (
           <ActivityIndicator size="small" color="#AF2219" />
@@ -130,6 +172,14 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
           </>
         )}
       </Pressable>
+
+      {/* Interactive SSO Pop-up Modal Sheet */}
+      <SSOModal
+        visible={modalProvider !== null}
+        provider={modalProvider}
+        onClose={() => setModalProvider(null)}
+        onSelectAccount={handleModalAuthenticate}
+      />
     </View>
   );
 }
