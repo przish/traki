@@ -1,9 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, Image, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Image, Pressable, ActivityIndicator, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/src/context/AuthContext";
 import { AuthProviderType } from "@/src/types";
+import { isAppleAuthAvailable, isGoogleOAuthReady } from "@/src/services/authService";
+import { THEME_CONFIG } from "@/src/constants";
+import SSOModal, { SelectedSSOAccount } from "./SSOModal";
 
 export interface LoginMethodsProps {
   onSuccess?: () => void;
@@ -16,9 +19,12 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
     signInWithGoogle,
     signInWithApple,
     signInWithSandbox,
+    signInWithCustomAccount,
     isAuthenticating,
   } = useAuth();
+
   const [activeButtonLoading, setActiveButtonLoading] = useState<AuthProviderType | null>(null);
+  const [ssoModalProvider, setSsoModalProvider] = useState<"google" | "apple" | null>(null);
 
   const handleProviderPress = async (provider: AuthProviderType) => {
     if (isAuthenticating || activeButtonLoading) return;
@@ -27,19 +33,103 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch {}
 
-    setActiveButtonLoading(provider);
+    // Stingray dev login
+    if (provider === "stingray") {
+      setActiveButtonLoading(provider);
+      try {
+        const result = await signInWithSandbox("stingray");
+        if (result.success) {
+          try {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          } catch {}
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            router.replace("/(tabs)");
+          }
+        }
+      } catch (err: any) {
+        if (onError) onError(err?.message || "Stingray sign in failed.");
+      } finally {
+        setActiveButtonLoading(null);
+      }
+      return;
+    }
 
-    try {
-      let result;
-      if (provider === "google") {
-        result = await signInWithGoogle();
-      } else if (provider === "apple") {
-        result = await signInWithApple();
-      } else {
-        result = await signInWithSandbox("stingray");
+    // Apple SSO Button Click
+    if (provider === "apple") {
+      const isAvailable = await isAppleAuthAvailable();
+
+      // If native Apple Sign-In is genuinely available (physical iOS device with Apple ID),
+      // invoke the native sheet. If on Simulator, Web, Android, or if native sheet fails,
+      // present the interactive Apple SSO modal sheet.
+      if (isAvailable && Platform.OS === "ios") {
+        setActiveButtonLoading("apple");
+        try {
+          const result = await signInWithApple({ allowSandbox: false });
+          if (result.success) {
+            try {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            } catch {}
+            if (onSuccess) {
+              onSuccess();
+            } else {
+              router.replace("/(tabs)");
+            }
+            return;
+          } else if (result.cancelled) {
+            return;
+          }
+        } catch (err) {
+          console.log("Native Apple auth unavailable, falling back to SSO modal:", err);
+        } finally {
+          setActiveButtonLoading(null);
+        }
       }
 
+      // Pop up the Apple SSO modal sheet
+      setSsoModalProvider("apple");
+      return;
+    }
+
+    // Google SSO Button Click
+    if (provider === "google") {
+      // If real OAuth credentials are configured, try the browser OAuth flow
+      if (isGoogleOAuthReady()) {
+        setActiveButtonLoading("google");
+        try {
+          const result = await signInWithGoogle({ allowSandbox: false });
+          if (result.success) {
+            try {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            } catch {}
+            if (onSuccess) {
+              onSuccess();
+            } else {
+              router.replace("/(tabs)");
+            }
+            return;
+          } else if (result.cancelled) {
+            return;
+          }
+        } catch (err) {
+          console.log("Google OAuth unavailable, opening SSO modal:", err);
+        } finally {
+          setActiveButtonLoading(null);
+        }
+      }
+
+      // Pop up the Google SSO modal sheet
+      setSsoModalProvider("google");
+      return;
+    }
+  };
+
+  const handleModalSelectAccount = async (account: SelectedSSOAccount) => {
+    try {
+      const result = await signInWithCustomAccount(account);
       if (result.success) {
+        setSsoModalProvider(null);
         try {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } catch {}
@@ -48,18 +138,13 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         } else {
           router.replace("/(tabs)");
         }
-      } else if (result.cancelled) {
-        // User dismissed the native sheet or browser session - clean exit
       } else if (result.error && onError) {
         onError(result.error);
       }
     } catch (err: any) {
-      console.error("SSO Error:", err);
       if (onError) {
-        onError(err?.message || `${provider} authentication encountered an error.`);
+        onError(err?.message || "Failed to sign in with chosen account.");
       }
-    } finally {
-      setActiveButtonLoading(null);
     }
   };
 
@@ -70,22 +155,16 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
 
   return (
     <View className="gap-2.5 w-full">
-      {/* Google SSO Button - Triggers expo-web-browser */}
+      {/* Google SSO Button - Opens Google SSO Sheet / Modal */}
       <Pressable
         disabled={isDisabled}
         className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
           isDisabled ? "opacity-60" : ""
         }`}
-        onPress={async () => {
-          try {
-            await handleProviderPress("google");
-          } catch (err) {
-            console.error("SSO Error:", err);
-          }
-        }}
+        onPress={() => handleProviderPress("google")}
       >
         {isGoogleLoading ? (
-          <ActivityIndicator size="small" color="#AF2219" />
+          <ActivityIndicator size="small" color={THEME_CONFIG.COLORS.BRAND} />
         ) : (
           <>
             <Image
@@ -100,22 +179,16 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         )}
       </Pressable>
 
-      {/* Apple SSO Button - Triggers expo-apple-authentication */}
+      {/* Apple SSO Button - Opens Apple SSO Sheet / Modal */}
       <Pressable
         disabled={isDisabled}
         className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
           isDisabled ? "opacity-60" : ""
         }`}
-        onPress={async () => {
-          try {
-            await handleProviderPress("apple");
-          } catch (err) {
-            console.error("SSO Error:", err);
-          }
-        }}
+        onPress={() => handleProviderPress("apple")}
       >
         {isAppleLoading ? (
-          <ActivityIndicator size="small" color="#AF2219" />
+          <ActivityIndicator size="small" color={THEME_CONFIG.COLORS.BRAND} />
         ) : (
           <>
             <Image
@@ -136,16 +209,10 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
           isDisabled ? "opacity-60" : ""
         }`}
-        onPress={async () => {
-          try {
-            await handleProviderPress("stingray");
-          } catch (err) {
-            console.error("SSO Error:", err);
-          }
-        }}
+        onPress={() => handleProviderPress("stingray")}
       >
         {isStingrayLoading ? (
-          <ActivityIndicator size="small" color="#AF2219" />
+          <ActivityIndicator size="small" color={THEME_CONFIG.COLORS.BRAND} />
         ) : (
           <>
             <Image
@@ -159,6 +226,14 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
           </>
         )}
       </Pressable>
+
+      {/* Interactive SSO Account Chooser Modal */}
+      <SSOModal
+        visible={ssoModalProvider !== null}
+        provider={ssoModalProvider}
+        onClose={() => setSsoModalProvider(null)}
+        onSelectAccount={handleModalSelectAccount}
+      />
     </View>
   );
 }

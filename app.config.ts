@@ -35,6 +35,7 @@ const config: ExpoConfig = {
     "expo-image",
     "expo-status-bar",
     "expo-apple-authentication",
+    "expo-web-browser",
   ],
   experiments: {
     typedRoutes: true,
