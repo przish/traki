@@ -15,6 +15,7 @@ import Logo from "../../components/logo";
 import Continue from "../../components/continue";
 import BackButton from "../../components/back-button";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { isValidPassword, doPasswordsMatch } from "@/src/constants";
 
 export default function PassCreate() {
   const router = useRouter();
@@ -22,14 +23,25 @@ export default function PassCreate() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorText, setErrorText] = useState("");
+
+  const isPasswordValid = isValidPassword(password);
+  const doMatch = doPasswordsMatch(password, confirmPassword);
+  const canSubmit = isPasswordValid && doMatch;
+
+  const getValidationHint = () => {
+    if (password.length > 0 && !isPasswordValid) {
+      return "Password must be at least 6 characters";
+    }
+    if (confirmPassword.length > 0 && !doMatch) {
+      return "Passwords do not match";
+    }
+    return "";
+  };
+
+  const errorText = getValidationHint();
 
   const handleFinish = () => {
-    if (password.length > 0 && confirmPassword.length > 0 && password !== confirmPassword) {
-      setErrorText("Passwords do not match");
-      return;
-    }
-    setErrorText("");
+    if (!canSubmit || isLoading) return;
     setIsLoading(true);
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -118,6 +130,7 @@ export default function PassCreate() {
           <View className="mt-2">
             <Continue
               title="Unlock Traki Quest"
+              disabled={!canSubmit || isLoading}
               loading={isLoading}
               onPress={handleFinish}
             />

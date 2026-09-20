@@ -18,6 +18,7 @@ import LoginMethods from "../../components/LoginMethods";
 import BackButton from "../../components/back-button";
 import { useAuth } from "@/src/context/AuthContext";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { isValidNonEmptyText } from "@/src/constants";
 
 export default function Login() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
+  const isFormValid = isValidNonEmptyText(identifier) && password.length > 0;
   const activeError = localError || contextError;
 
   const toggleShowPassword = () => {
@@ -35,6 +37,7 @@ export default function Login() {
   };
 
   const handleLogin = () => {
+    if (!isFormValid || isLoading) return;
     setLocalError(null);
     clearError();
     setIsLoading(true);
@@ -149,6 +152,7 @@ export default function Login() {
 
           <Continue
             title="Log In & Battle"
+            disabled={!isFormValid || isLoading}
             loading={isLoading}
             onPress={handleLogin}
           />

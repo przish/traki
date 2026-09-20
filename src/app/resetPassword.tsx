@@ -13,6 +13,7 @@ import TextField from "../../components/text-field";
 import Continue from "../../components/continue";
 import BackButton from "../../components/back-button";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { isValidEmail } from "@/src/constants";
 
 export default function ResetPassword() {
   const router = useRouter();
@@ -20,8 +21,10 @@ export default function ResetPassword() {
   const [isSent, setIsSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const isEmailValid = isValidEmail(email);
+
   const handleSend = () => {
-    if (!email) return;
+    if (!isEmailValid || isLoading) return;
     setIsLoading(true);
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -96,6 +99,7 @@ export default function ResetPassword() {
 
             <Continue
               title="Send Reset Link"
+              disabled={!isEmailValid || isLoading}
               loading={isLoading}
               onPress={handleSend}
             />

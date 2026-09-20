@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
-import { AUTH_CONFIG, THEME_CONFIG } from "../src/constants";
+import { AUTH_CONFIG, THEME_CONFIG, isValidEmail, isValidNonEmptyText } from "@/src/constants";
 
 export interface SelectedSSOAccount {
   id?: string;
@@ -59,11 +59,12 @@ export default function SSOModal({
     }
   };
 
-  const handleCustomSubmit = async () => {
-    const email = customEmail.trim();
-    if (!email || !email.includes("@")) return;
+  const isCustomValid = isValidEmail(customEmail) && isValidNonEmptyText(customName);
 
-    const name = customName.trim() || email.split("@")[0];
+  const handleCustomSubmit = async () => {
+    if (!isCustomValid || loading) return;
+    const email = customEmail.trim();
+    const name = customName.trim();
     await handleAccountClick({
       email,
       displayName: name,
@@ -188,11 +189,11 @@ export default function SSOModal({
                       className="bg-white border border-stone-300 rounded-lg px-3 py-2 text-sm text-stone-800"
                     />
                     <Pressable
-                      disabled={loading || !customEmail.includes("@")}
+                      disabled={loading || !isCustomValid}
                       onPress={handleCustomSubmit}
                       style={{ backgroundColor: THEME_CONFIG.COLORS.BRAND }}
                       className={`h-10 rounded-lg items-center justify-center mt-1 ${
-                        !customEmail.includes("@") ? "opacity-50" : ""
+                        !isCustomValid || loading ? "opacity-50" : "active:opacity-90"
                       }`}
                     >
                       <Text className="text-white font-bold text-sm">Sign In with This Account</Text>
