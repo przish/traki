@@ -11,6 +11,18 @@ vi.mock("expo-apple-authentication", () => ({
 
 vi.mock("expo-web-browser", () => ({
   maybeCompleteAuthSession: vi.fn(),
+  openAuthSessionAsync: vi.fn().mockResolvedValue({ type: "success" }),
+}));
+
+vi.mock("expo-auth-session", () => ({
+  makeRedirectUri: vi.fn().mockReturnValue("traki://"),
+  AuthRequest: vi.fn().mockImplementation(() => ({
+    promptAsync: vi.fn(),
+  })),
+  ResponseType: {
+    Token: "token",
+    Code: "code",
+  },
 }));
 
 import {
@@ -53,7 +65,20 @@ describe("Single Sign-On (SSO) Authentication Suite", () => {
       expect(result.user?.provider).toBe("google");
     });
 
-    it("signs in with user-selected Google account details from interactive SSO modal", async () => {
+    it("handles Google Sign In cancellation via WebBrowser cleanly", async () => {
+      const WebBrowser = await import("expo-web-browser");
+      vi.mocked(WebBrowser.openAuthSessionAsync).mockResolvedValueOnce({
+        type: "cancel",
+      } as any);
+
+      const result = await signInWithGoogle({ allowSandbox: true });
+
+      expect(result.success).toBe(false);
+      expect(result.cancelled).toBe(true);
+      expect(result.error).toContain("cancelled");
+    });
+
+    it("signs in with user-selected Google account details", async () => {
       const result = await signInWithAccountDetails({
         email: "irishpureza@gmail.com",
         displayName: "Irish Pureza",
@@ -143,6 +168,21 @@ describe("Single Sign-On (SSO) Authentication Suite", () => {
       expect(result.success).toBe(false);
       expect(result.cancelled).toBe(true);
       expect(result.error).toContain("cancelled");
+    });
+
+    it("handles Apple Sign In simulator error gracefully when sandbox is allowed", async () => {
+      const AppleAuth = await import("expo-apple-authentication");
+      vi.mocked(AppleAuth.isAvailableAsync).mockResolvedValueOnce(true);
+      vi.mocked(AppleAuth.signInAsync).mockRejectedValueOnce({
+        code: "ERR_REQUEST_UNKNOWN",
+        message: "The authorization request failed. (1001)",
+      });
+
+      const result = await signInWithApple({ allowSandbox: true });
+
+      expect(result.success).toBe(true);
+      expect(result.user).toBeDefined();
+      expect(result.user?.provider).toBe("apple");
     });
 
     it("supports Stingray developer login sandbox", async () => {
