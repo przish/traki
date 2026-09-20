@@ -11,115 +11,75 @@ import {
 
 let dbInstance: any = null;
 
-// In-memory fallback for web environment
+// In-memory fallback for web environment — starts EMPTY (no mock data)
 const memoryStore = {
   authSession: null as AuthSession | null,
-  wallets: [
-    { id: "w_cash", name: "Daily Cash", type: "cash", balance: 350000, currency: "PHP", color: "#3C9B55" },
-    { id: "w_bank", name: "Main Bank", type: "bank", balance: 1850000, currency: "PHP", color: "#2B6CB0" },
-    { id: "w_card", name: "Credit Card", type: "credit", balance: -45000, currency: "PHP", color: "#D92C3B" },
-    { id: "w_save", name: "Emergency Vault", type: "savings", balance: 5000000, currency: "PHP", color: "#F1B64A" },
-  ] as Wallet[],
-  categories: [
-    { id: "c_food", name: "Food & Dining", icon: "restaurant", budget_cap: 800000, color: "#F4D5CB" },
-    { id: "c_transport", name: "Transport", icon: "directions-car", budget_cap: 300000, color: "#DCE8F0" },
-    { id: "c_bills", name: "Bills & Utilities", icon: "lightbulb", budget_cap: 500000, color: "#FFF1D7" },
-    { id: "c_shop", name: "Shopping", icon: "shopping-bag", budget_cap: 400000, color: "#EAE5F4" },
-  ] as Category[],
-  transactions: [
-    {
-      id: "tx_1",
-      amount: 15000,
-      type: "expense",
-      category_id: "c_food",
-      wallet_id: "w_cash",
-      note: "Breakfast & Coffee",
-      created_at: new Date().toISOString(),
-      is_synced: 1,
-    },
-  ] as Transaction[],
+  wallets: [] as Wallet[],
+  categories: [] as Category[],
+  transactions: [] as Transaction[],
   profile: {
     id: "player_1",
-    level: 3,
-    exp: 420,
-    gold: 1850,
-    trk_tokens: 8,
-    current_streak: 5,
-    highest_streak: 12,
-    streak_shields: 2,
-    last_logged_date: new Date().toISOString().split("T")[0],
-    partner_name: "Kira",
-    partner_streak: 5,
+    level: 1,
+    exp: 0,
+    gold: 0,
+    trk_tokens: 0,
+    current_streak: 1,
+    highest_streak: 1,
+    streak_shields: 1,
+    last_logged_date: null,
+    partner_name: undefined,
+    partner_id: undefined,
+    partner_streak: 0,
   } as PlayerProfile,
-  bosses: [
-    {
-      id: "boss_daily",
-      tier: "daily",
-      name: "Imp of Impulsive Buys",
-      title: "Daily Mob",
-      max_hp: 500,
-      current_hp: 250,
-      gold_reward: 120,
-      trk_reward: 0,
-      exp_reward: 50,
-      sprite_key: "goblin",
-      expires_at: new Date(Date.now() + 12 * 3600 * 1000).toISOString(),
-      is_defeated: 0,
-    },
-    {
-      id: "boss_weekly",
-      tier: "weekly",
-      name: "The Interest Behemoth",
-      title: "Weekly Miniboss",
-      max_hp: 2000,
-      current_hp: 1350,
-      gold_reward: 500,
-      trk_reward: 3,
-      exp_reward: 250,
-      sprite_key: "behemoth",
-      expires_at: new Date(Date.now() + 4 * 86400 * 1000).toISOString(),
-      is_defeated: 0,
-    },
-    {
-      id: "boss_monthly",
-      tier: "monthly",
-      name: "Titan of Inflation",
-      title: "Monthly Titan",
-      max_hp: 8000,
-      current_hp: 6100,
-      gold_reward: 2000,
-      trk_reward: 10,
-      exp_reward: 1000,
-      sprite_key: "titan",
-      expires_at: new Date(Date.now() + 18 * 86400 * 1000).toISOString(),
-      is_defeated: 0,
-    },
-  ] as BossEncounter[],
-  goals: [
-    {
-      id: "g_tokyo",
-      title: "Tokyo Trip Fund",
-      target_amount: 15000000,
-      current_amount: 9500000,
-      trk_tokens_required: 15,
-      is_unlocked: 0,
-      category: "travel",
-      icon: "flight",
-      tone: "#EAE5F4",
-    },
-    {
-      id: "g_emergency",
-      title: "3-Month Safety Net",
-      target_amount: 10000000,
-      current_amount: 10000000,
-      trk_tokens_required: 5,
-      is_unlocked: 1,
-      category: "savings",
-      icon: "shield",
-      tone: "#C9E7D2",
-    },
-  ] as SavingsGoal[],
+  bosses: [] as BossEncounter[],
+  goals: [] as SavingsGoal[],
 };
+
+// Default boss encounters (game mechanic, auto-seeded on first launch)
+const DEFAULT_BOSSES: BossEncounter[] = [
+  {
+    id: "boss_daily",
+    tier: "daily",
+    name: "Imp of Impulsive Buys",
+    title: "Daily Mob",
+    max_hp: 500,
+    current_hp: 500,
+    gold_reward: 120,
+    trk_reward: 0,
+    exp_reward: 50,
+    sprite_key: "goblin",
+    expires_at: new Date(Date.now() + 12 * 3600 * 1000).toISOString(),
+    is_defeated: 0,
+  },
+  {
+    id: "boss_weekly",
+    tier: "weekly",
+    name: "The Interest Behemoth",
+    title: "Weekly Miniboss",
+    max_hp: 2000,
+    current_hp: 2000,
+    gold_reward: 500,
+    trk_reward: 3,
+    exp_reward: 250,
+    sprite_key: "behemoth",
+    expires_at: new Date(Date.now() + 4 * 86400 * 1000).toISOString(),
+    is_defeated: 0,
+  },
+  {
+    id: "boss_monthly",
+    tier: "monthly",
+    name: "Titan of Inflation",
+    title: "Monthly Titan",
+    max_hp: 8000,
+    current_hp: 8000,
+    gold_reward: 2000,
+    trk_reward: 10,
+    exp_reward: 1000,
+    sprite_key: "titan",
+    expires_at: new Date(Date.now() + 18 * 86400 * 1000).toISOString(),
+    is_defeated: 0,
+  },
+];
 
 export async function getDatabase() {
   if (Platform.OS === "web") {
@@ -174,7 +134,6 @@ async function initializeDatabase(db: any) {
     CREATE INDEX IF NOT EXISTS idx_tx_created ON transactions(created_at);
     CREATE INDEX IF NOT EXISTS idx_tx_wallet ON transactions(wallet_id);
     CREATE INDEX IF NOT EXISTS idx_tx_cat ON transactions(category_id);
-    CREATE INDEX IF NOT EXISTS idx_boss_tier ON boss_encounters(tier);
 
     CREATE TABLE IF NOT EXISTS player_profile (
       id TEXT PRIMARY KEY,
@@ -186,6 +145,7 @@ async function initializeDatabase(db: any) {
       highest_streak INTEGER NOT NULL DEFAULT 1,
       streak_shields INTEGER NOT NULL DEFAULT 1,
       last_logged_date TEXT,
+      partner_id TEXT,
       partner_name TEXT,
       partner_streak INTEGER DEFAULT 0
     );
@@ -204,6 +164,8 @@ async function initializeDatabase(db: any) {
       expires_at TEXT NOT NULL,
       is_defeated INTEGER NOT NULL DEFAULT 0
     );
+
+    CREATE INDEX IF NOT EXISTS idx_boss_tier ON boss_encounters(tier);
 
     CREATE TABLE IF NOT EXISTS savings_goals (
       id TEXT PRIMARY KEY,
@@ -228,6 +190,7 @@ async function initializeDatabase(db: any) {
     );
   `);
 
+  // Seed default profile if none exists (clean start, no mock balances)
   const profileRow = await db.getFirstAsync("SELECT id FROM player_profile LIMIT 1");
   if (!profileRow) {
     await db.runAsync(
@@ -243,85 +206,93 @@ async function initializeDatabase(db: any) {
         memoryStore.profile.highest_streak,
         memoryStore.profile.streak_shields,
         memoryStore.profile.last_logged_date,
-        memoryStore.profile.partner_name,
-        memoryStore.profile.partner_streak,
+        memoryStore.profile.partner_name ?? null,
+        memoryStore.profile.partner_streak ?? 0,
       ]
     );
+  }
 
-    for (const w of memoryStore.wallets) {
-      await db.runAsync(
-        `INSERT OR IGNORE INTO wallets (id, name, type, balance, currency, color) VALUES (?, ?, ?, ?, ?, ?)`,
-        [w.id, w.name, w.type, w.balance, w.currency, w.color]
-      );
-    }
-
-    for (const c of memoryStore.categories) {
-      await db.runAsync(
-        `INSERT OR IGNORE INTO categories (id, name, icon, budget_cap, color) VALUES (?, ?, ?, ?, ?)`,
-        [c.id, c.name, c.icon, c.budget_cap ?? 500000, c.color]
-      );
-    }
-
-    for (const b of memoryStore.bosses) {
+  // Seed default boss encounters if none exist (game mechanic, not user data)
+  const bossRow = await db.getFirstAsync("SELECT id FROM boss_encounters LIMIT 1");
+  if (!bossRow) {
+    for (const b of DEFAULT_BOSSES) {
       await db.runAsync(
         `INSERT OR IGNORE INTO boss_encounters (id, tier, name, title, max_hp, current_hp, gold_reward, trk_reward, exp_reward, sprite_key, expires_at, is_defeated)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [b.id, b.tier, b.name, b.title, b.max_hp, b.current_hp, b.gold_reward, b.trk_reward, b.exp_reward, b.sprite_key, b.expires_at, b.is_defeated]
       );
     }
-
-    for (const g of memoryStore.goals) {
-      await db.runAsync(
-        `INSERT OR IGNORE INTO savings_goals (id, title, target_amount, current_amount, trk_tokens_required, is_unlocked, category, icon, tone)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [g.id, g.title, g.target_amount, g.current_amount, g.trk_tokens_required, g.is_unlocked, g.category, g.icon, g.tone]
-      );
-    }
   }
 }
 
 export const TrakiStorage = {
+  // ─── READ OPERATIONS ────────────────────────────────────────────────
+
   getWallets: async (): Promise<Wallet[]> => {
     const db = await getDatabase();
     if (!db) return memoryStore.wallets;
     const rows = await db.getAllAsync("SELECT * FROM wallets");
-    return rows.length ? rows : memoryStore.wallets;
+    return rows as Wallet[];
   },
 
   getCategories: async (): Promise<Category[]> => {
     const db = await getDatabase();
     if (!db) return memoryStore.categories;
     const rows = await db.getAllAsync("SELECT * FROM categories");
-    return rows.length ? rows : memoryStore.categories;
+    return rows as Category[];
   },
 
   getTransactions: async (): Promise<Transaction[]> => {
     const db = await getDatabase();
     if (!db) return memoryStore.transactions;
     const rows = await db.getAllAsync("SELECT * FROM transactions ORDER BY created_at DESC LIMIT 50");
-    return rows.length ? rows : memoryStore.transactions;
+    return rows as Transaction[];
   },
 
   getProfile: async (): Promise<PlayerProfile> => {
     const db = await getDatabase();
     if (!db) return memoryStore.profile;
     const row = await db.getFirstAsync("SELECT * FROM player_profile LIMIT 1");
-    return row || memoryStore.profile;
+    return (row as PlayerProfile) || memoryStore.profile;
   },
 
   getBosses: async (): Promise<BossEncounter[]> => {
     const db = await getDatabase();
-    if (!db) return memoryStore.bosses;
+    if (!db) return memoryStore.bosses.length ? memoryStore.bosses : DEFAULT_BOSSES;
     const rows = await db.getAllAsync("SELECT * FROM boss_encounters");
-    return rows.length ? rows : memoryStore.bosses;
+    return rows.length ? (rows as BossEncounter[]) : DEFAULT_BOSSES;
   },
 
   getGoals: async (): Promise<SavingsGoal[]> => {
     const db = await getDatabase();
     if (!db) return memoryStore.goals;
     const rows = await db.getAllAsync("SELECT * FROM savings_goals");
-    return rows.length ? rows : memoryStore.goals;
+    return rows as SavingsGoal[];
   },
+
+  // ─── SYNC HELPERS ───────────────────────────────────────────────────
+
+  getUnsyncedTransactions: async (): Promise<Transaction[]> => {
+    const db = await getDatabase();
+    if (!db) return memoryStore.transactions.filter((t) => t.is_synced === 0);
+    const rows = await db.getAllAsync("SELECT * FROM transactions WHERE is_synced = 0 ORDER BY created_at DESC");
+    return rows as Transaction[];
+  },
+
+  markTransactionsSynced: async (ids: string[]): Promise<void> => {
+    if (ids.length === 0) return;
+    const db = await getDatabase();
+    if (!db) {
+      memoryStore.transactions.forEach((t) => {
+        if (ids.includes(t.id)) t.is_synced = 1;
+      });
+      return;
+    }
+    const placeholders = ids.map(() => "?").join(",");
+    await db.runAsync(`UPDATE transactions SET is_synced = 1 WHERE id IN (${placeholders})`, ids);
+  },
+
+  // ─── WRITE OPERATIONS ──────────────────────────────────────────────
 
   saveTransaction: async (tx: Transaction, walletDeduction: number): Promise<void> => {
     const db = await getDatabase();
@@ -345,6 +316,92 @@ export const TrakiStorage = {
       );
     });
   },
+
+  addWallet: async (wallet: Wallet): Promise<void> => {
+    const db = await getDatabase();
+    if (!db) {
+      memoryStore.wallets.push(wallet);
+      return;
+    }
+    await db.runAsync(
+      `INSERT INTO wallets (id, name, type, balance, currency, color) VALUES (?, ?, ?, ?, ?, ?)`,
+      [wallet.id, wallet.name, wallet.type, wallet.balance, wallet.currency, wallet.color]
+    );
+  },
+
+  updateWallet: async (id: string, partial: Partial<Wallet>): Promise<void> => {
+    const db = await getDatabase();
+    if (!db) {
+      const w = memoryStore.wallets.find((x) => x.id === id);
+      if (w) Object.assign(w, partial);
+      return;
+    }
+    const sets: string[] = [];
+    const vals: any[] = [];
+    Object.entries(partial).forEach(([k, v]) => {
+      sets.push(`${k} = ?`);
+      vals.push(v);
+    });
+    if (sets.length) {
+      vals.push(id);
+      await db.runAsync(`UPDATE wallets SET ${sets.join(", ")} WHERE id = ?`, vals);
+    }
+  },
+
+  deleteWallet: async (id: string): Promise<void> => {
+    const db = await getDatabase();
+    if (!db) {
+      memoryStore.wallets = memoryStore.wallets.filter((w) => w.id !== id);
+      return;
+    }
+    await db.runAsync("DELETE FROM wallets WHERE id = ?", [id]);
+  },
+
+  addCategory: async (category: Category): Promise<void> => {
+    const db = await getDatabase();
+    if (!db) {
+      memoryStore.categories.push(category);
+      return;
+    }
+    await db.runAsync(
+      `INSERT INTO categories (id, name, icon, budget_cap, color) VALUES (?, ?, ?, ?, ?)`,
+      [category.id, category.name, category.icon, category.budget_cap ?? null, category.color]
+    );
+  },
+
+  addSavingsGoal: async (goal: SavingsGoal): Promise<void> => {
+    const db = await getDatabase();
+    if (!db) {
+      memoryStore.goals.push(goal);
+      return;
+    }
+    await db.runAsync(
+      `INSERT INTO savings_goals (id, title, target_amount, current_amount, trk_tokens_required, is_unlocked, category, icon, tone)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [goal.id, goal.title, goal.target_amount, goal.current_amount, goal.trk_tokens_required, goal.is_unlocked, goal.category, goal.icon, goal.tone]
+    );
+  },
+
+  updateSavingsGoal: async (id: string, partial: Partial<SavingsGoal>): Promise<void> => {
+    const db = await getDatabase();
+    if (!db) {
+      const g = memoryStore.goals.find((x) => x.id === id);
+      if (g) Object.assign(g, partial);
+      return;
+    }
+    const sets: string[] = [];
+    const vals: any[] = [];
+    Object.entries(partial).forEach(([k, v]) => {
+      sets.push(`${k} = ?`);
+      vals.push(v);
+    });
+    if (sets.length) {
+      vals.push(id);
+      await db.runAsync(`UPDATE savings_goals SET ${sets.join(", ")} WHERE id = ?`, vals);
+    }
+  },
+
+  // ─── COMBAT OPERATIONS ─────────────────────────────────────────────
 
   applyCombatCleave: async (
     dailyDamage: number,
@@ -394,12 +451,14 @@ export const TrakiStorage = {
     const vals: any[] = [];
     Object.entries(partial).forEach(([k, v]) => {
       sets.push(`${k} = ?`);
-      vals.push(v);
+      vals.push(v ?? null);
     });
     if (sets.length) {
       await db.runAsync(`UPDATE player_profile SET ${sets.join(", ")}`, vals);
     }
   },
+
+  // ─── AUTH SESSION ──────────────────────────────────────────────────
 
   saveAuthSession: async (session: AuthSession): Promise<void> => {
     memoryStore.authSession = session;
@@ -435,4 +494,38 @@ export const TrakiStorage = {
     if (!db) return;
     await db.runAsync("DELETE FROM auth_session");
   },
+
+  clearAll: async (): Promise<void> => {
+    memoryStore.authSession = null;
+    memoryStore.wallets = [];
+    memoryStore.categories = [];
+    memoryStore.transactions = [];
+    memoryStore.goals = [];
+    memoryStore.bosses = [];
+    memoryStore.profile = {
+      id: "player_1",
+      level: 1,
+      exp: 0,
+      gold: 0,
+      trk_tokens: 0,
+      current_streak: 1,
+      highest_streak: 1,
+      streak_shields: 1,
+      last_logged_date: null,
+      partner_name: undefined,
+      partner_id: undefined,
+      partner_streak: 0,
+    };
+    const db = await getDatabase();
+    if (!db) return;
+    await db.execAsync(`
+      DELETE FROM auth_session;
+      DELETE FROM transactions;
+      DELETE FROM wallets;
+      DELETE FROM categories;
+      DELETE FROM savings_goals;
+      DELETE FROM bosses;
+    `);
+  },
 };
+

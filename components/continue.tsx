@@ -2,6 +2,7 @@ import React from "react";
 import {
   Pressable,
   Text,
+  View,
   ActivityIndicator,
   type GestureResponderEvent,
   type StyleProp,
@@ -69,16 +70,15 @@ export default function Continue({
       disabled={disabled || loading}
       onPress={handlePress}
       style={style}
-      className={`h-[44px] rounded-xl px-4 flex-row items-center justify-center w-full shadow-2xs ${
+      className={`h-[44px] w-full rounded-xl flex-row items-center justify-center shadow-2xs ${
         disabled ? "opacity-50" : ""
       } ${className}`}
     >
       {({ pressed }) => {
         const vStyle = getVariantStyles(pressed);
         return (
-          <Pressable
-            disabled
-            className={`w-full h-full rounded-xl flex-row items-center justify-center ${vStyle.container}`}
+          <View
+            className={`w-full h-full rounded-xl flex-row items-center justify-center px-4 ${vStyle.container}`}
           >
             {loading ? (
               <ActivityIndicator
@@ -88,11 +88,11 @@ export default function Continue({
             ) : children ? (
               children
             ) : (
-              <Text className={`text-center font-bold text-base ${vStyle.text}`}>
+              <Text className={`text-center font-bold text-sm ${vStyle.text}`}>
                 {title}
               </Text>
             )}
-          </Pressable>
+          </View>
         );
       }}
     </Pressable>

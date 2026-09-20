@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import {
   Wallet,
   Category,
@@ -7,10 +7,12 @@ import {
   BossEncounter,
   SavingsGoal,
   CombatStrikeResult,
+  SyncState,
 } from "../types";
 import { TrakiStorage } from "../services/db";
 import { calculateCombatStrike } from "../services/combatEngine";
 import { evaluateStreakOnAction, parseToCents } from "../services/economyService";
+import { SupabaseSyncService } from "../services/supabaseSync";
 
 interface TrakiContextType {
   wallets: Wallet[];
@@ -20,14 +22,20 @@ interface TrakiContextType {
   bosses: BossEncounter[];
   goals: SavingsGoal[];
   isLoading: boolean;
+  syncState: SyncState;
   logTransaction: (
     amountInput: string | number,
     categoryId: string,
     walletId: string,
     note?: string
   ) => Promise<CombatStrikeResult>;
+  addWallet: (wallet: Omit<Wallet, "id">) => Promise<void>;
+  addCategory: (category: Omit<Category, "id">) => Promise<void>;
+  addSavingsGoal: (goal: Omit<SavingsGoal, "id" | "is_unlocked" | "current_amount">) => Promise<void>;
   buyShopItem: (itemTitle: string, priceGold: number, rewardType: "shield" | "multiplier") => Promise<boolean>;
   unlockGoal: (goalId: string) => Promise<boolean>;
+  depositToGoal: (goalId: string, amountCents: number) => Promise<void>;
+  syncNow: () => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
@@ -41,8 +49,13 @@ export function TrakiProvider({ children }: { children: React.ReactNode }) {
   const [bosses, setBosses] = useState<BossEncounter[]>([]);
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [syncState, setSyncState] = useState<SyncState>({
+    status: "idle",
+    lastSyncedAt: null,
+    pendingCount: 0,
+  });
 
-  const loadAll = async () => {
+  const loadAll = useCallback(async () => {
     try {
       const [w, c, t, p, b, g] = await Promise.all([
         TrakiStorage.getWallets(),
@@ -63,13 +76,19 @@ export function TrakiProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadAll();
+  }, [loadAll]);
+
+  // Subscribe to sync state changes
+  useEffect(() => {
+    const unsub = SupabaseSyncService.subscribe(setSyncState);
+    return unsub;
   }, []);
 
-  const logTransaction = async (
+  const logTransaction = useCallback(async (
     amountInput: string | number,
     categoryId: string,
     walletId: string,
@@ -78,11 +97,9 @@ export function TrakiProvider({ children }: { children: React.ReactNode }) {
     const amountInCents = parseToCents(amountInput);
     const todayStr = new Date().toISOString().split("T")[0];
 
-    // Count today's transactions for anti-spam diminishing returns
     const todayLogs = transactions.filter((tx) => tx.created_at.startsWith(todayStr)).length;
     const streakDays = profile?.current_streak ?? 1;
 
-    // Calculate combat strike
     const strike = calculateCombatStrike({
       streakDays,
       todayLogCount: todayLogs,
@@ -91,12 +108,10 @@ export function TrakiProvider({ children }: { children: React.ReactNode }) {
     const goldEarned = Math.round(strike.totalDamage * 0.5);
     const expEarned = Math.round(strike.totalDamage * 0.25);
 
-    // Evaluate streak & shield consumption
     const streakResult = profile
       ? evaluateStreakOnAction(profile, todayStr)
       : { currentStreak: 1, consumedShield: false, shieldsRemaining: 1, streakReset: false };
 
-    // Record transaction
     const newTx: Transaction = {
       id: `tx_${Date.now()}`,
       amount: amountInCents,
@@ -141,9 +156,49 @@ export function TrakiProvider({ children }: { children: React.ReactNode }) {
       expEarned,
       defeatedBosses: [],
     };
-  };
+  }, [transactions, profile, loadAll]);
 
-  const buyShopItem = async (
+  const addWallet = useCallback(async (walletData: Omit<Wallet, "id">) => {
+    const wallet: Wallet = {
+      ...walletData,
+      id: `w_${Date.now()}`,
+    };
+    await TrakiStorage.addWallet(wallet);
+    await loadAll();
+  }, [loadAll]);
+
+  const addCategory = useCallback(async (catData: Omit<Category, "id">) => {
+    const category: Category = {
+      ...catData,
+      id: `c_${Date.now()}`,
+    };
+    await TrakiStorage.addCategory(category);
+    await loadAll();
+  }, [loadAll]);
+
+  const addSavingsGoal = useCallback(async (
+    goalData: Omit<SavingsGoal, "id" | "is_unlocked" | "current_amount">
+  ) => {
+    const goal: SavingsGoal = {
+      ...goalData,
+      id: `g_${Date.now()}`,
+      current_amount: 0,
+      is_unlocked: 0,
+    };
+    await TrakiStorage.addSavingsGoal(goal);
+    await loadAll();
+  }, [loadAll]);
+
+  const depositToGoal = useCallback(async (goalId: string, amountCents: number) => {
+    const goal = goals.find((g) => g.id === goalId);
+    if (!goal) return;
+    await TrakiStorage.updateSavingsGoal(goalId, {
+      current_amount: goal.current_amount + amountCents,
+    });
+    await loadAll();
+  }, [goals, loadAll]);
+
+  const buyShopItem = useCallback(async (
     _itemTitle: string,
     priceGold: number,
     rewardType: "shield" | "multiplier"
@@ -158,9 +213,9 @@ export function TrakiProvider({ children }: { children: React.ReactNode }) {
     await TrakiStorage.updateProfile(updates);
     await loadAll();
     return true;
-  };
+  }, [profile, loadAll]);
 
-  const unlockGoal = async (goalId: string): Promise<boolean> => {
+  const unlockGoal = useCallback(async (goalId: string): Promise<boolean> => {
     const goal = goals.find((g) => g.id === goalId);
     if (!goal || !profile) return false;
     if (goal.current_amount < goal.target_amount || profile.trk_tokens < goal.trk_tokens_required) {
@@ -170,10 +225,14 @@ export function TrakiProvider({ children }: { children: React.ReactNode }) {
     await TrakiStorage.updateProfile({
       trk_tokens: profile.trk_tokens - goal.trk_tokens_required,
     });
-    goal.is_unlocked = 1;
+    await TrakiStorage.updateSavingsGoal(goalId, { is_unlocked: 1 });
     await loadAll();
     return true;
-  };
+  }, [goals, profile, loadAll]);
+
+  const syncNow = useCallback(async () => {
+    await SupabaseSyncService.syncAll();
+  }, []);
 
   return (
     <TrakiContext.Provider
@@ -185,9 +244,15 @@ export function TrakiProvider({ children }: { children: React.ReactNode }) {
         bosses,
         goals,
         isLoading,
+        syncState,
         logTransaction,
+        addWallet,
+        addCategory,
+        addSavingsGoal,
         buyShopItem,
         unlockGoal,
+        depositToGoal,
+        syncNow,
         refreshData: loadAll,
       }}
     >

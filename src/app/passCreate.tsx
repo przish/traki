@@ -14,6 +14,7 @@ import TextField from "../../components/text-field";
 import Logo from "../../components/logo";
 import Continue from "../../components/continue";
 import BackButton from "../../components/back-button";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PassCreate() {
   const router = useRouter();
@@ -41,22 +42,27 @@ export default function PassCreate() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 bg-white"
-    >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          alignItems: "center",
-          paddingHorizontal: 28,
-          paddingBottom: 40,
-        }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom", "left", "right"]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1"
       >
-        <BackButton />
-        <Logo />
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="w-full max-w-[420px] self-center items-center">
+            <View className="w-full flex-row items-center mb-1">
+              <BackButton />
+            </View>
+
+            <Logo size={90} className="my-1" />
 
         <View className="my-2">
           <Text className="text-[#AF2219] text-2xl font-black tracking-tight text-center">
@@ -117,7 +123,9 @@ export default function PassCreate() {
             />
           </View>
         </View>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
+  </SafeAreaView>
   );
 }

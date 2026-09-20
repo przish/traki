@@ -1,41 +1,23 @@
 import React, { useState } from "react";
-import { ScrollView, Text, View, Pressable } from "react-native";
+import { ScrollView, Text, View, Pressable, TextInput } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useTraki } from "@/src/context/TrakiContext";
-import { formatCents, evaluateGoalUnlock } from "@/src/services/economyService";
+import { formatCents, evaluateGoalUnlock, parseToCents } from "@/src/services/economyService";
 
-const BOUNTY_CARDS = [
-  {
-    id: "b1",
-    title: "No-Spend Weekend",
-    detail: "Complete 2 shared days without non-essential impulse purchases",
-    rewardText: "+250 Gold & +1 TRK Token",
-    icon: "savings",
-    status: "Active",
-  },
-  {
-    id: "b2",
-    title: "The Daily Double",
-    detail: "Both partners finish daily habit strikes for 7 consecutive days",
-    rewardText: "+500 Gold & +2 TRK Tokens",
-    icon: "bolt",
-    status: "In Progress (5/7)",
-  },
-  {
-    id: "b3",
-    title: "Utility Champion",
-    detail: "Clear and log recurring utility bills before their due date",
-    rewardText: "+100 EXP & Streak Shield",
-    icon: "lightbulb",
-    status: "Locked",
-  },
-];
+const GOAL_ICONS = ["flight", "shield", "home", "school", "directions-car", "laptop-mac", "favorite", "star"];
+const GOAL_TONES = ["#EAE5F4", "#C9E7D2", "#FFF1D7", "#DCE8F0", "#F4D5CB"];
 
 export default function VaultScreen() {
-  const { goals, profile, unlockGoal } = useTraki();
+  const { goals, profile, unlockGoal, depositToGoal, addSavingsGoal } = useTraki();
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [showAddGoal, setShowAddGoal] = useState(false);
+  const [newGoalTitle, setNewGoalTitle] = useState("");
+  const [newGoalTarget, setNewGoalTarget] = useState("");
+  const [newGoalIcon, setNewGoalIcon] = useState(GOAL_ICONS[0]);
+  const [newGoalTone, setNewGoalTone] = useState(GOAL_TONES[0]);
+  const [newGoalTrkRequired, setNewGoalTrkRequired] = useState("5");
 
   const handleUnlock = async (goalId: string) => {
     const goal = goals.find((g) => g.id === goalId);
@@ -53,7 +35,7 @@ export default function VaultScreen() {
 
     try {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch {}
+    } catch { }
 
     const ok = await unlockGoal(goalId);
     if (ok) {
@@ -65,11 +47,13 @@ export default function VaultScreen() {
     }
   };
 
-  const handleDepositToGoal = async (goal: (typeof goals)[0]) => {
+  const handleDepositToGoal = async (goalId: string) => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } catch {}
-    goal.current_amount += 50000;
+    } catch { }
+    const goal = goals.find((g) => g.id === goalId);
+    if (!goal) return;
+    await depositToGoal(goalId, 50000);
     setStatusMsg({
       type: "success",
       text: `Saved +PHP 500.00 into ${goal.title}!`,
@@ -77,16 +61,39 @@ export default function VaultScreen() {
     setTimeout(() => setStatusMsg(null), 3000);
   };
 
+  const handleAddGoal = async () => {
+    if (!newGoalTitle.trim() || !newGoalTarget.trim()) return;
+    try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch { }
+    const targetCents = parseToCents(newGoalTarget);
+    if (targetCents <= 0) return;
+
+    await addSavingsGoal({
+      title: newGoalTitle.trim(),
+      target_amount: targetCents,
+      trk_tokens_required: parseInt(newGoalTrkRequired, 10) || 5,
+      category: "savings",
+      icon: newGoalIcon,
+      tone: newGoalTone,
+    });
+
+    setNewGoalTitle("");
+    setNewGoalTarget("");
+    setNewGoalTrkRequired("5");
+    setShowAddGoal(false);
+    setStatusMsg({ type: "success", text: `Vault target "${newGoalTitle.trim()}" created!` });
+    setTimeout(() => setStatusMsg(null), 3000);
+  };
+
   return (
     <ScreenContainer className="px-4 pt-2">
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Header */}
         <View className="py-3 mb-2 flex-row justify-between items-center">
           <View>
             <Text className="text-[10px] font-black uppercase tracking-widest text-[#AF2219]">
               Savings Vault
             </Text>
-            <Text className="text-2xl font-black text-stone-900">Bounties & Goals</Text>
+            <Text className="text-2xl font-black text-stone-900">Goals & Targets</Text>
           </View>
           <View className="flex-row items-center gap-1.5 bg-[#AF221915] px-3 py-1.5 rounded-full border border-[#AF221940]">
             <MaterialIcons name="stars" size={16} color="#AF2219" />
@@ -99,16 +106,14 @@ export default function VaultScreen() {
         {/* Feedback Alert Toast */}
         {statusMsg && (
           <View
-            className={`p-3.5 rounded-2xl mb-4 border ${
-              statusMsg.type === "success"
-                ? "bg-[#C9E7D2] border-[#3C9B55]/40 text-[#1C5E2D]"
-                : "bg-[#AF221915] border-[#AF221940]"
-            }`}
+            className={`p-3.5 rounded-2xl mb-4 border ${statusMsg.type === "success"
+              ? "bg-[#C9E7D2] border-[#3C9B55]/40 text-[#1C5E2D]"
+              : "bg-[#AF221915] border-[#AF221940]"
+              }`}
           >
             <Text
-              className={`text-xs font-bold ${
-                statusMsg.type === "success" ? "text-[#1C5E2D]" : "text-[#AF2219]"
-              }`}
+              className={`text-xs font-bold ${statusMsg.type === "success" ? "text-[#1C5E2D]" : "text-[#AF2219]"
+                }`}
             >
               {statusMsg.text}
             </Text>
@@ -145,153 +150,214 @@ export default function VaultScreen() {
         </View>
 
         {/* Savings Goals List */}
-        <Text className="text-xs font-black uppercase tracking-wider text-stone-600 mb-2.5">
-          Active Vault Targets
-        </Text>
+        <View className="flex-row items-center justify-between mb-2.5">
+          <Text className="text-xs font-black uppercase tracking-wider text-stone-600">
+            Active Vault Targets
+          </Text>
+          <Pressable onPress={() => setShowAddGoal(!showAddGoal)}>
+            <Text className="text-xs font-bold text-[#AF2219]">
+              {showAddGoal ? "Cancel" : "+ Add Goal"}
+            </Text>
+          </Pressable>
+        </View>
 
-        <View className="gap-3.5 mb-5">
-          {goals.map((g) => {
-            const fundedPercent = Math.min(
-              100,
-              Math.round((g.current_amount / g.target_amount) * 100)
-            );
-            const hasEnoughTokens = (profile?.trk_tokens ?? 0) >= g.trk_tokens_required;
-            const isFullyFunded = g.current_amount >= g.target_amount;
-            const canUnlock = isFullyFunded && hasEnoughTokens && !g.is_unlocked;
+        {/* Add Goal Form */}
+        {showAddGoal && (
+          <View className="bg-white rounded-2xl p-4 border border-[#AF221930] mb-4 shadow-2xs">
+            <TextInput
+              value={newGoalTitle}
+              onChangeText={setNewGoalTitle}
+              placeholder="Goal name (e.g. Tokyo Trip Fund)"
+              placeholderTextColor="#8B8988"
+              className="h-[44px] px-3 rounded-xl border border-stone-200 bg-[#FAF8F6] text-sm font-medium text-stone-900 mb-3"
+            />
+            <TextInput
+              value={newGoalTarget}
+              onChangeText={setNewGoalTarget}
+              placeholder="Target amount (e.g. 150000)"
+              placeholderTextColor="#8B8988"
+              keyboardType="numeric"
+              className="h-[44px] px-3 rounded-xl border border-stone-200 bg-[#FAF8F6] text-sm font-medium text-stone-900 mb-3"
+            />
+            <TextInput
+              value={newGoalTrkRequired}
+              onChangeText={setNewGoalTrkRequired}
+              placeholder="TRK tokens required (e.g. 5)"
+              placeholderTextColor="#8B8988"
+              keyboardType="numeric"
+              className="h-[44px] px-3 rounded-xl border border-stone-200 bg-[#FAF8F6] text-sm font-medium text-stone-900 mb-3"
+            />
+            <Text className="text-[11px] font-bold text-stone-500 mb-2">Icon</Text>
+            <View className="flex-row gap-2 mb-3 flex-wrap">
+              {GOAL_ICONS.map((icon) => (
+                <Pressable
+                  key={icon}
+                  onPress={() => setNewGoalIcon(icon)}
+                  className={`h-9 w-9 rounded-xl items-center justify-center border ${newGoalIcon === icon
+                    ? "bg-[#AF2219] border-[#AF2219]"
+                    : "bg-[#AF221915] border-[#AF221930]"
+                    }`}
+                >
+                  <MaterialIcons name={icon as any} size={18} color={newGoalIcon === icon ? "#FFF" : "#AF2219"} />
+                </Pressable>
+              ))}
+            </View>
+            <Text className="text-[11px] font-bold text-stone-500 mb-2">Tone</Text>
+            <View className="flex-row gap-2.5 mb-4">
+              {GOAL_TONES.map((tone) => (
+                <Pressable
+                  key={tone}
+                  onPress={() => setNewGoalTone(tone)}
+                  style={{ backgroundColor: tone }}
+                  className={`w-8 h-8 rounded-full ${newGoalTone === tone ? "border-2 border-stone-900" : "border border-stone-200"}`}
+                />
+              ))}
+            </View>
+            <Pressable
+              onPress={handleAddGoal}
+              disabled={!newGoalTitle.trim() || !newGoalTarget.trim()}
+              className={`h-[44px] rounded-xl items-center justify-center ${newGoalTitle.trim() && newGoalTarget.trim()
+                ? "bg-[#AF2219] active:bg-[#8F1E2C]"
+                : "bg-stone-200"
+                }`}
+            >
+              <Text className={`font-bold text-sm ${newGoalTitle.trim() && newGoalTarget.trim() ? "text-white" : "text-stone-400"}`}>
+                Create Savings Goal
+              </Text>
+            </Pressable>
+          </View>
+        )}
 
-            return (
-              <View
-                key={g.id}
-                className="bg-white rounded-2xl p-4 border border-stone-200 shadow-2xs"
-              >
-                <View className="flex-row items-start justify-between mb-2">
-                  <View className="flex-row items-center gap-2.5">
-                    <View className="h-10 w-10 rounded-xl bg-[#AF221915] border border-[#AF221930] items-center justify-center">
-                      <MaterialIcons name={g.icon as any} size={20} color="#AF2219" />
+        {goals.length === 0 && !showAddGoal ? (
+          <View className="bg-white rounded-2xl p-6 border border-stone-200 mb-5 items-center shadow-2xs">
+            <View className="h-16 w-16 rounded-2xl bg-[#AF221915] border-2 border-[#AF221930] items-center justify-center mb-3">
+              <MaterialIcons name="savings" size={32} color="#AF2219" />
+            </View>
+            <Text className="text-base font-black text-stone-900 text-center mb-1">
+              No Savings Goals Yet
+            </Text>
+            <Text className="text-xs text-stone-500 font-medium text-center leading-relaxed mb-4">
+              Set a savings target to unlock the Vault.{"\n"}Earn TRK tokens from boss battles to unlock goals!
+            </Text>
+            <Pressable
+              onPress={() => setShowAddGoal(true)}
+              className="h-[44px] px-6 rounded-xl bg-[#AF2219] items-center justify-center active:bg-[#8F1E2C] shadow-xs"
+            >
+              <Text className="text-white font-bold text-sm">+ Create First Goal</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View className="gap-3.5 mb-5">
+            {goals.map((g) => {
+              const fundedPercent = Math.min(
+                100,
+                Math.round((g.current_amount / g.target_amount) * 100)
+              );
+              const hasEnoughTokens = (profile?.trk_tokens ?? 0) >= g.trk_tokens_required;
+              const isFullyFunded = g.current_amount >= g.target_amount;
+              const canUnlock = isFullyFunded && hasEnoughTokens && !g.is_unlocked;
+
+              return (
+                <View
+                  key={g.id}
+                  className="bg-white rounded-2xl p-4 border border-stone-200 shadow-2xs"
+                >
+                  <View className="flex-row items-start justify-between mb-2">
+                    <View className="flex-row items-center gap-2.5">
+                      <View className="h-10 w-10 rounded-xl bg-[#AF221915] border border-[#AF221930] items-center justify-center">
+                        <MaterialIcons name={g.icon as any} size={20} color="#AF2219" />
+                      </View>
+                      <View>
+                        <Text className="text-sm font-black text-stone-900">{g.title}</Text>
+                        <Text className="text-[11px] text-stone-500 font-medium">
+                          Target: {formatCents(g.target_amount)}
+                        </Text>
+                      </View>
                     </View>
-                    <View>
-                      <Text className="text-sm font-black text-stone-900">{g.title}</Text>
-                      <Text className="text-[11px] text-stone-500 font-medium">
-                        Target: {formatCents(g.target_amount)}
+
+                    <View
+                      className={`px-2.5 py-1 rounded-full border ${g.is_unlocked
+                        ? "bg-[#C9E7D2] border-[#3C9B55]/40"
+                        : "bg-stone-100 border-stone-200"
+                        }`}
+                    >
+                      <Text
+                        className={`text-[10px] font-black uppercase tracking-wider ${g.is_unlocked ? "text-[#1C5E2D]" : "text-stone-600"
+                          }`}
+                      >
+                        {g.is_unlocked ? "Unlocked" : "Locked"}
                       </Text>
                     </View>
                   </View>
 
-                  <View
-                    className={`px-2.5 py-1 rounded-full border ${
-                      g.is_unlocked
-                        ? "bg-[#C9E7D2] border-[#3C9B55]/40"
-                        : "bg-stone-100 border-stone-200"
-                    }`}
-                  >
-                    <Text
-                      className={`text-[10px] font-black uppercase tracking-wider ${
-                        g.is_unlocked ? "text-[#1C5E2D]" : "text-stone-600"
-                      }`}
-                    >
-                      {g.is_unlocked ? "Unlocked" : "Locked"}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Progress Bar */}
-                <View className="mt-2 mb-3">
-                  <View className="flex-row justify-between mb-1">
-                    <Text className="text-[11px] font-bold text-stone-500">Funded Amount</Text>
-                    <Text className="text-[11px] font-black text-stone-900 tabular-nums">
-                      {formatCents(g.current_amount)} ({fundedPercent}%)
-                    </Text>
-                  </View>
-                  <View className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
-                    <View
-                      style={{
-                        width: `${fundedPercent}%`,
-                        backgroundColor: fundedPercent >= 100 ? "#3C9B55" : "#AF2219",
-                        height: "100%",
-                        borderRadius: 999,
-                      }}
-                    />
-                  </View>
-                </View>
-
-                {/* Requirements Badges */}
-                <View className="flex-row items-center justify-between pt-2 border-t border-stone-100">
-                  <View className="flex-row items-center gap-1.5">
-                    <MaterialIcons
-                      name="stars"
-                      size={14}
-                      color={hasEnoughTokens ? "#AF2219" : "#8B8988"}
-                    />
-                    <Text
-                      className={`text-[11px] font-bold ${
-                        hasEnoughTokens ? "text-[#AF2219]" : "text-stone-400"
-                      }`}
-                    >
-                      Requires {g.trk_tokens_required} TRK
-                    </Text>
+                  {/* Progress Bar */}
+                  <View className="mt-2 mb-3">
+                    <View className="flex-row justify-between mb-1">
+                      <Text className="text-[11px] font-bold text-stone-500">Funded Amount</Text>
+                      <Text className="text-[11px] font-black text-stone-900 tabular-nums">
+                        {formatCents(g.current_amount)} ({fundedPercent}%)
+                      </Text>
+                    </View>
+                    <View className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
+                      <View
+                        style={{
+                          width: `${fundedPercent}%`,
+                          backgroundColor: fundedPercent >= 100 ? "#3C9B55" : "#AF2219",
+                          height: "100%",
+                          borderRadius: 999,
+                        }}
+                      />
+                    </View>
                   </View>
 
-                  {!g.is_unlocked && (
-                    <View className="flex-row gap-2">
-                      <Pressable
-                        onPress={() => handleDepositToGoal(g)}
-                        className="px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-200"
+                  {/* Requirements Badges */}
+                  <View className="flex-row items-center justify-between pt-2 border-t border-stone-100">
+                    <View className="flex-row items-center gap-1.5">
+                      <MaterialIcons
+                        name="stars"
+                        size={14}
+                        color={hasEnoughTokens ? "#AF2219" : "#8B8988"}
+                      />
+                      <Text
+                        className={`text-[11px] font-bold ${hasEnoughTokens ? "text-[#AF2219]" : "text-stone-400"
+                          }`}
                       >
-                        <Text className="text-[11px] font-bold text-stone-700">+₱500</Text>
-                      </Pressable>
+                        Requires {g.trk_tokens_required} TRK
+                      </Text>
+                    </View>
 
-                      <Pressable
-                        onPress={() => handleUnlock(g.id)}
-                        disabled={!canUnlock}
-                        className={`px-3 py-1 rounded-lg ${
-                          canUnlock
+                    {!g.is_unlocked && (
+                      <View className="flex-row gap-2">
+                        <Pressable
+                          onPress={() => handleDepositToGoal(g.id)}
+                          className="px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-200"
+                        >
+                          <Text className="text-[11px] font-bold text-stone-700">+₱500</Text>
+                        </Pressable>
+
+                        <Pressable
+                          onPress={() => handleUnlock(g.id)}
+                          disabled={!canUnlock}
+                          className={`px-3 py-1 rounded-lg ${canUnlock
                             ? "bg-[#AF2219] shadow-xs active:bg-[#8F1E2C]"
                             : "bg-stone-200 opacity-60"
-                        }`}
-                      >
-                        <Text
-                          className={`text-[11px] font-bold ${
-                            canUnlock ? "text-white" : "text-stone-400"
-                          }`}
+                            }`}
                         >
-                          Unlock
-                        </Text>
-                      </Pressable>
-                    </View>
-                  )}
+                          <Text
+                            className={`text-[11px] font-bold ${canUnlock ? "text-white" : "text-stone-400"
+                              }`}
+                          >
+                            Unlock
+                          </Text>
+                        </Pressable>
+                      </View>
+                    )}
+                  </View>
                 </View>
-              </View>
-            );
-          })}
-        </View>
-
-        {/* Bounties & Shared Quests */}
-        <Text className="text-xs font-black uppercase tracking-wider text-stone-600 mb-2.5">
-          Duo Bounties & Quests
-        </Text>
-
-        <View className="gap-2.5">
-          {BOUNTY_CARDS.map((b) => (
-            <View
-              key={b.id}
-              className="bg-white rounded-2xl p-3.5 border border-stone-200 flex-row items-center justify-between shadow-2xs"
-            >
-              <View className="flex-row items-center gap-3 flex-1 pr-2">
-                <View className="h-9 w-9 rounded-xl bg-[#AF221915] border border-[#AF221930] items-center justify-center">
-                  <MaterialIcons name={b.icon as any} size={18} color="#AF2219" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xs font-black text-stone-900">{b.title}</Text>
-                  <Text className="text-[10px] text-stone-500 mt-0.5">{b.detail}</Text>
-                  <Text className="text-[10px] font-bold text-[#AF2219] mt-1">{b.rewardText}</Text>
-                </View>
-              </View>
-              <View className="px-2.5 py-1 rounded-full bg-stone-100 border border-stone-200">
-                <Text className="text-[10px] font-bold text-stone-600">{b.status}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
     </ScreenContainer>
   );

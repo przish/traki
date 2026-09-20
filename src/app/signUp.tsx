@@ -14,8 +14,10 @@ import Continue from "../../components/continue";
 import Logo from "../../components/logo";
 import ORdivider from "../../components/ORdivider";
 import LoginMethods from "../../components/LoginMethods";
+import BackButton from "../../components/back-button";
 import { useAuth } from "@/src/context/AuthContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignUp() {
   const router = useRouter();
@@ -35,30 +37,36 @@ export default function SignUp() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 bg-white"
-    >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          alignItems: "center",
-          paddingHorizontal: 28,
-          paddingBottom: 40,
-        }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom", "left", "right"]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1"
       >
-        <Logo />
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="w-full max-w-[420px] self-center items-center">
+            <View className="w-full flex-row items-center mb-1">
+              <BackButton />
+            </View>
 
-        <View className="my-2">
-          <Text className="text-[#AF2219] text-2xl font-black tracking-tight text-center">
-            Let&apos;s start with your email
-          </Text>
-          <Text className="text-stone-500 text-xs text-center font-medium mt-0.5">
-            Your journey to financial mastery starts here
-          </Text>
-        </View>
+            <Logo size={90} className="my-1" />
+
+            <View className="my-1.5 items-center">
+              <Text className="text-[#AF2219] text-2xl font-black tracking-tight text-center">
+                Let&apos;s start with your email
+              </Text>
+              <Text className="text-stone-500 text-xs text-center font-medium mt-0.5">
+                Your journey to financial mastery starts here
+              </Text>
+            </View>
 
         {activeError ? (
           <View className="w-full bg-red-50 border border-red-200 rounded-xl p-3 my-2 flex-row items-center justify-between">
@@ -103,7 +111,7 @@ export default function SignUp() {
           />
         </View>
 
-        <View className="mt-8">
+        <View className="mt-5 mb-2">
           <Pressable
             onPress={() => {
               router.push("/login");
@@ -120,7 +128,9 @@ export default function SignUp() {
             )}
           </Pressable>
         </View>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
+  </SafeAreaView>
   );
 }

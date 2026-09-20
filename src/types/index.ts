@@ -40,6 +40,7 @@ export interface PlayerProfile {
   highest_streak: number;
   streak_shields: number;
   last_logged_date: string | null; // YYYY-MM-DD
+  partner_id?: string;
   partner_name?: string;
   partner_streak?: number;
 }
@@ -110,3 +111,23 @@ export interface AuthSession {
   created_at: string;
 }
 
+export type SyncStatus = "idle" | "syncing" | "synced" | "offline" | "error";
+
+export type PartnerLinkStatus = "pending" | "active" | "expired";
+
+export interface PartnerLink {
+  id: string;
+  inviter_id: string;
+  invitee_id?: string;
+  invite_code: string;
+  status: PartnerLinkStatus;
+  created_at: string;
+  expires_at: string;
+}
+
+export interface SyncState {
+  status: SyncStatus;
+  lastSyncedAt: Date | null;
+  pendingCount: number;
+  errorMessage?: string;
+}
