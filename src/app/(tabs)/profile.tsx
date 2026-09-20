@@ -178,6 +178,7 @@ export default function ProfileScreen() {
                 {user?.provider === "google" && (
                   <Image
                     source={require("../../../assets/images/logos/google.png")}
+                    style={{ width: 14, height: 14 }}
                     className="w-3.5 h-3.5"
                     resizeMode="contain"
                   />
@@ -185,6 +186,7 @@ export default function ProfileScreen() {
                 {user?.provider === "apple" && (
                   <Image
                     source={require("../../../assets/images/logos/apple-logo.png")}
+                    style={{ width: 14, height: 14 }}
                     className="w-3.5 h-3.5"
                     resizeMode="contain"
                   />

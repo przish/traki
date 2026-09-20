@@ -34,3 +34,10 @@ html, body {
   margin: 0;
   padding: 0;
 }
+
+/* Constrain web image scaling to avoid unstyled raw asset blowouts */
+img {
+  max-width: 100%;
+  object-fit: contain;
+}
+

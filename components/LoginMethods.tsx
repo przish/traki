@@ -94,7 +94,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
 
     // Google SSO Button Click
     if (provider === "google") {
-      // If real OAuth credentials are configured, try the browser OAuth flow
+      // If real OAuth credentials are confirmed and ready, try the OAuth flow
       if (isGoogleOAuthReady()) {
         setActiveButtonLoading("google");
         try {
@@ -111,6 +111,8 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
             return;
           } else if (result.cancelled) {
             return;
+          } else if (result.error) {
+            console.log("Google OAuth failed, falling back to SSO modal:", result.error);
           }
         } catch (err) {
           console.log("Google OAuth unavailable, opening SSO modal:", err);
@@ -119,7 +121,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         }
       }
 
-      // Pop up the Google SSO modal sheet
+      // Pop up the Google SSO modal sheet for interactive account selection
       setSsoModalProvider("google");
       return;
     }
@@ -169,6 +171,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
           <>
             <Image
               source={require("../assets/images/logos/google.png")}
+              style={{ width: 18, height: 18 }}
               className="w-4 h-4"
               resizeMode="contain"
             />
@@ -193,6 +196,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
           <>
             <Image
               source={require("../assets/images/logos/apple-logo.png")}
+              style={{ width: 18, height: 18 }}
               className="w-4 h-4"
               resizeMode="contain"
             />
@@ -217,6 +221,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
           <>
             <Image
               source={require("../assets/images/logos/dev-logo.png")}
+              style={{ width: 32, height: 18 }}
               className="w-8 h-4"
               resizeMode="contain"
             />

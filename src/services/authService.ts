@@ -49,11 +49,16 @@ export async function isAppleAuthAvailable(): Promise<boolean> {
  * Checks if real Google OAuth credentials or Supabase OAuth is configured
  */
 export function isGoogleOAuthReady(): boolean {
-  return (
-    isSupabaseConfigured() ||
+  if (
     Boolean(process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID) ||
     Boolean(process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID)
-  );
+  ) {
+    return true;
+  }
+  if (process.env.EXPO_PUBLIC_ENABLE_GOOGLE_OAUTH === "true" && isSupabaseConfigured()) {
+    return true;
+  }
+  return false;
 }
 
 /**

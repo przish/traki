@@ -99,6 +99,7 @@ export default function SSOModal({
                     ? require("../assets/images/logos/google.png")
                     : require("../assets/images/logos/apple-logo.png")
                 }
+                style={{ width: 24, height: 24 }}
                 className="w-6 h-6"
                 resizeMode="contain"
               />
