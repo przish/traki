@@ -78,6 +78,7 @@ export default function Continue({
         const vStyle = getVariantStyles(pressed);
         return (
           <View
+            pointerEvents="none"
             className={`w-full h-full rounded-xl flex-row items-center justify-center px-4 ${vStyle.container}`}
           >
             {loading ? (
