@@ -1,5 +1,6 @@
 import "@/global.css";
 import React from "react";
+import * as WebBrowser from "expo-web-browser";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -13,6 +14,9 @@ import { useFonts } from "expo-font";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+
+// Complete any pending auth session redirect at the module root
+WebBrowser.maybeCompleteAuthSession();
 
 function AppShell() {
   const colors = useColors();

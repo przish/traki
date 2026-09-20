@@ -90,7 +90,7 @@ export async function signInWithApple(options?: { allowSandbox?: boolean }): Pro
         return { success: false, cancelled: true, error: "Apple sign-in was cancelled." };
       }
 
-      console.warn("Apple Sign-In prompt notice:", err?.message || err);
+      console.error("SSO Error:", err);
 
       // On iOS Simulator without an Apple ID logged in, AppleAuthentication.signInAsync
       // fails with ERR_REQUEST_UNKNOWN (1001) or ERR_UNAVAILABLE.
@@ -175,7 +175,7 @@ export async function signInWithGoogle(options?: { allowSandbox?: boolean }): Pr
           }
         }
       } catch (sbOAuthErr) {
-        console.warn("Supabase Google OAuth error:", sbOAuthErr);
+        console.error("SSO Error:", sbOAuthErr);
       }
     }
 
@@ -220,7 +220,7 @@ export async function signInWithGoogle(options?: { allowSandbox?: boolean }): Pr
           return { success: false, cancelled: true, error: "Google sign-in was cancelled." };
         }
       } catch (err: any) {
-        console.warn("Google OAuth prompt error:", err);
+        console.error("SSO Error:", err);
         if (options?.allowSandbox !== false && __DEV__) {
           return signInWithDevSandbox("google");
         }
@@ -245,7 +245,7 @@ export async function signInWithGoogle(options?: { allowSandbox?: boolean }): Pr
           return { success: false, cancelled: true, error: "Google sign-in was cancelled." };
         }
       } catch (browserErr) {
-        console.warn("WebBrowser simulator popup notice:", browserErr);
+        console.error("SSO Error:", browserErr);
       }
 
       // Smoothly complete the session for simulator testing
@@ -257,7 +257,7 @@ export async function signInWithGoogle(options?: { allowSandbox?: boolean }): Pr
       error: "Google Client ID is not configured in EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID.",
     };
   } catch (outerErr: any) {
-    console.warn("signInWithGoogle outer error:", outerErr);
+    console.error("SSO Error:", outerErr);
     if (options?.allowSandbox !== false) {
       return signInWithDevSandbox("google");
     }

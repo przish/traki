@@ -54,6 +54,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         onError(result.error);
       }
     } catch (err: any) {
+      console.error("SSO Error:", err);
       if (onError) {
         onError(err?.message || `${provider} authentication encountered an error.`);
       }
@@ -75,7 +76,13 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
           isDisabled ? "opacity-60" : ""
         }`}
-        onPress={() => handleProviderPress("google")}
+        onPress={async () => {
+          try {
+            await handleProviderPress("google");
+          } catch (err) {
+            console.error("SSO Error:", err);
+          }
+        }}
       >
         {isGoogleLoading ? (
           <ActivityIndicator size="small" color="#AF2219" />
@@ -99,7 +106,13 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
           isDisabled ? "opacity-60" : ""
         }`}
-        onPress={() => handleProviderPress("apple")}
+        onPress={async () => {
+          try {
+            await handleProviderPress("apple");
+          } catch (err) {
+            console.error("SSO Error:", err);
+          }
+        }}
       >
         {isAppleLoading ? (
           <ActivityIndicator size="small" color="#AF2219" />
@@ -123,7 +136,13 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
           isDisabled ? "opacity-60" : ""
         }`}
-        onPress={() => handleProviderPress("stingray")}
+        onPress={async () => {
+          try {
+            await handleProviderPress("stingray");
+          } catch (err) {
+            console.error("SSO Error:", err);
+          }
+        }}
       >
         {isStingrayLoading ? (
           <ActivityIndicator size="small" color="#AF2219" />
