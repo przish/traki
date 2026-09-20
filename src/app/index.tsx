@@ -36,6 +36,7 @@ export default function Index() {
           >
             <Image
               source={require("../../assets/images/logos/traki-logo.png")}
+              style={{ width: 180, height: 180 }}
               className="w-[180px] h-[180px]"
               resizeMode="contain"
             />
