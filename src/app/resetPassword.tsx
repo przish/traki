@@ -12,6 +12,7 @@ import * as Haptics from "expo-haptics";
 import TextField from "../../components/text-field";
 import Continue from "../../components/continue";
 import BackButton from "../../components/back-button";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ResetPassword() {
   const router = useRouter();
@@ -33,20 +34,23 @@ export default function ResetPassword() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 bg-white"
-    >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingHorizontal: 28,
-          paddingBottom: 40,
-        }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom", "left", "right"]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1"
       >
-        <BackButton />
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="w-full max-w-[420px] self-center">
+            <BackButton />
 
         <View className="my-6">
           <Text className="text-[32px] font-black text-[#AF2219] leading-tight">
@@ -105,7 +109,9 @@ export default function ResetPassword() {
             </View>
           </View>
         )}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
+  </SafeAreaView>
   );
 }

@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -87,11 +88,12 @@ export default function SSOModal({
       >
         <Pressable className="flex-1" onPress={onClose} />
 
-        <View className="bg-white rounded-t-3xl px-6 pt-6 pb-9 shadow-2xl border-t border-stone-200">
-          {/* Header Bar Handle */}
-          <View className="items-center -mt-2 mb-4">
-            <View className="w-12 h-1.5 bg-stone-300 rounded-full" />
-          </View>
+        <SafeAreaView edges={["bottom"]} className="w-full">
+          <View className="bg-white rounded-t-3xl px-6 pt-6 pb-6 shadow-2xl border-t border-stone-200 w-full max-w-[480px] self-center">
+            {/* Header Bar Handle */}
+            <View className="items-center -mt-2 mb-4">
+              <View className="w-12 h-1.5 bg-stone-300 rounded-full" />
+            </View>
 
           {/* Modal Header */}
           <View className="flex-row items-center justify-between pb-3 border-b border-stone-100">
@@ -349,6 +351,7 @@ export default function SSOModal({
             </View>
           )}
         </View>
+      </SafeAreaView>
       </KeyboardAvoidingView>
     </Modal>
   );
