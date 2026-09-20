@@ -26,7 +26,7 @@ Traki unites the nostalgia, visceral reward loops, and sensory delight of classi
 | **Foreground / Ink** | `#171717` (Soft black) | `#F7F4F1` (Warm off-white) | High-contrast headers and values |
 | **Muted** | `#8B8988` | `#AAA7A5` | Subtitles, labels, timestamps |
 | **Border / Line** | `#E7E1DE` | `#303336` | Card outlines, dividers |
-| **Primary Accent** | `#D92C3B` (Crimson) | `#F07178` (Coral flame) | Combat buttons, boss alerts, key CTAs |
+| **Primary Accent** | `#AF2219` (Ruby Crimson) | `#E04F46` (Coral flame) | Combat buttons, boss alerts, key CTAs |
 | **Gold / Currency** | `#F1B64A` | `#F6CA78` | In-game Gold, streaks, bounties |
 | **Lavender / TRK** | `#E8E4F2` | `#322B45` | TRK Token badges, Vault goals |
 | **Success / Heal** | `#3C9B55` | `#78C98B` | Positive cash flow, completed missions |

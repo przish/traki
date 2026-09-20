@@ -1,15 +1,16 @@
-import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
-import { PlatformPressable } from "@react-navigation/elements";
+import React from "react";
 import * as Haptics from "expo-haptics";
-import { Platform } from "react-native";
+import { Platform, Pressable } from "react-native";
 
-export function HapticTab(props: BottomTabBarButtonProps) {
+export function HapticTab(props: any) {
   return (
-    <PlatformPressable
+    <Pressable
       {...props}
       onPressIn={(ev) => {
         if (Platform.OS === "ios") {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          try {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          } catch {}
         }
         props.onPressIn?.(ev);
       }}

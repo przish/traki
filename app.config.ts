@@ -8,7 +8,6 @@ const config: ExpoConfig = {
   icon: "./assets/images/icon.png",
   scheme: "traki",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.traki.app",
@@ -31,6 +30,9 @@ const config: ExpoConfig = {
   plugins: [
     "expo-router",
     "expo-sqlite",
+    "expo-font",
+    "expo-image",
+    "expo-status-bar",
   ],
   experiments: {
     typedRoutes: true,
