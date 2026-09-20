@@ -10,7 +10,7 @@ import {
 } from "../types";
 import { TrakiStorage } from "../services/db";
 import { calculateCombatStrike } from "../services/combatEngine";
-import { evaluateStreakOnAction, formatCents, parseToCents } from "../services/economyService";
+import { evaluateStreakOnAction, parseToCents } from "../services/economyService";
 
 interface TrakiContextType {
   wallets: Wallet[];
