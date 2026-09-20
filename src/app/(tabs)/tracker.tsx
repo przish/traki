@@ -6,6 +6,7 @@ import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useTraki } from "@/src/context/TrakiContext";
 import { formatCents } from "@/src/services/economyService";
+import { isValidNonEmptyText } from "@/src/constants";
 
 const WALLET_COLORS = ["#3C9B55", "#2B6CB0", "#D92C3B", "#F1B64A", "#AF2219", "#8B5CF6"];
 const WALLET_TYPES: { label: string; value: "cash" | "bank" | "credit" | "savings" }[] = [
@@ -36,8 +37,10 @@ export default function TrackerScreen() {
     ? transactions.filter((t) => t.wallet_id === selectedWalletId)
     : transactions;
 
+  const isWalletValid = isValidNonEmptyText(newWalletName);
+
   const handleAddWallet = async () => {
-    if (!newWalletName.trim()) return;
+    if (!isWalletValid) return;
     try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch { }
     await addWallet({
       name: newWalletName.trim(),
@@ -200,13 +203,13 @@ export default function TrackerScreen() {
             </View>
             <Pressable
               onPress={handleAddWallet}
-              disabled={!newWalletName.trim()}
-              className={`h-[44px] rounded-xl items-center justify-center ${newWalletName.trim()
+              disabled={!isWalletValid}
+              className={`h-[44px] rounded-xl items-center justify-center ${isWalletValid
                 ? "bg-[#AF2219] active:bg-[#8F1E2C]"
                 : "bg-stone-200"
                 }`}
             >
-              <Text className={`font-bold text-sm ${newWalletName.trim() ? "text-white" : "text-stone-400"}`}>
+              <Text className={`font-bold text-sm ${isWalletValid ? "text-white" : "text-stone-400"}`}>
                 Create Wallet
               </Text>
             </Pressable>

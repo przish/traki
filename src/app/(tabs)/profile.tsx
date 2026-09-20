@@ -8,6 +8,7 @@ import { useTraki } from "@/src/context/TrakiContext";
 import { useThemeContext } from "@/lib/theme-provider";
 import { useAuth } from "@/src/context/AuthContext";
 import { PartnerService } from "@/src/services/partnerService";
+import { isValidPartnerCode } from "@/src/constants";
 
 export default function ProfileScreen() {
   const { profile, syncState, syncNow } = useTraki();
@@ -98,7 +99,7 @@ export default function ProfileScreen() {
   };
 
   const handleRedeemCode = async () => {
-    if (!redeemCode.trim() || redeemCode.trim().length < 6) {
+    if (!isValidPartnerCode(redeemCode) || isRedeeming) {
       setPartnerMsg({ type: "error", text: "Enter a valid 6-character code." });
       return;
     }
@@ -339,13 +340,13 @@ export default function ProfileScreen() {
                     />
                     <Pressable
                       onPress={handleRedeemCode}
-                      disabled={isRedeeming || redeemCode.length < 6}
-                      className={`h-[44px] px-4 rounded-xl items-center justify-center ${redeemCode.length >= 6
+                      disabled={isRedeeming || !isValidPartnerCode(redeemCode)}
+                      className={`h-[44px] px-4 rounded-xl items-center justify-center ${isValidPartnerCode(redeemCode)
                         ? "bg-[#AF2219] active:bg-[#8F1E2C]"
                         : "bg-stone-200"
                         }`}
                     >
-                      <Text className={`text-sm font-bold ${redeemCode.length >= 6 ? "text-white" : "text-stone-400"}`}>
+                      <Text className={`text-sm font-bold ${isValidPartnerCode(redeemCode) ? "text-white" : "text-stone-400"}`}>
                         {isRedeeming ? "..." : "Link"}
                       </Text>
                     </Pressable>

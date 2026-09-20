@@ -16,6 +16,7 @@ import ORdivider from "../../components/ORdivider";
 import LoginMethods from "../../components/LoginMethods";
 import BackButton from "../../components/back-button";
 import { useAuth } from "@/src/context/AuthContext";
+import { isValidEmail } from "@/src/constants";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -25,9 +26,11 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
 
+  const isEmailValid = isValidEmail(email);
   const activeError = localError || contextError;
 
   const handleContinue = () => {
+    if (!isEmailValid) return;
     setLocalError(null);
     clearError();
     try {
@@ -100,6 +103,7 @@ export default function SignUp() {
 
           <Continue
             title="Continue to Passcode"
+            disabled={!isEmailValid}
             onPress={handleContinue}
           />
 

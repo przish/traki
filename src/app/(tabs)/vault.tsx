@@ -5,6 +5,7 @@ import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useTraki } from "@/src/context/TrakiContext";
 import { formatCents, evaluateGoalUnlock, parseToCents } from "@/src/services/economyService";
+import { isValidNonEmptyText, isValidPositiveAmount } from "@/src/constants";
 
 const GOAL_ICONS = ["flight", "shield", "home", "school", "directions-car", "laptop-mac", "favorite", "star"];
 const GOAL_TONES = ["#EAE5F4", "#C9E7D2", "#FFF1D7", "#DCE8F0", "#F4D5CB"];
@@ -18,6 +19,8 @@ export default function VaultScreen() {
   const [newGoalIcon, setNewGoalIcon] = useState(GOAL_ICONS[0]);
   const [newGoalTone, setNewGoalTone] = useState(GOAL_TONES[0]);
   const [newGoalTrkRequired, setNewGoalTrkRequired] = useState("5");
+
+  const isGoalValid = isValidNonEmptyText(newGoalTitle) && isValidPositiveAmount(newGoalTarget) && parseToCents(newGoalTarget) > 0;
 
   const handleUnlock = async (goalId: string) => {
     const goal = goals.find((g) => g.id === goalId);
@@ -62,7 +65,7 @@ export default function VaultScreen() {
   };
 
   const handleAddGoal = async () => {
-    if (!newGoalTitle.trim() || !newGoalTarget.trim()) return;
+    if (!isGoalValid) return;
     try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch { }
     const targetCents = parseToCents(newGoalTarget);
     if (targetCents <= 0) return;
@@ -215,13 +218,13 @@ export default function VaultScreen() {
             </View>
             <Pressable
               onPress={handleAddGoal}
-              disabled={!newGoalTitle.trim() || !newGoalTarget.trim()}
-              className={`h-[44px] rounded-xl items-center justify-center ${newGoalTitle.trim() && newGoalTarget.trim()
+              disabled={!isGoalValid}
+              className={`h-[44px] rounded-xl items-center justify-center ${isGoalValid
                 ? "bg-[#AF2219] active:bg-[#8F1E2C]"
                 : "bg-stone-200"
                 }`}
             >
-              <Text className={`font-bold text-sm ${newGoalTitle.trim() && newGoalTarget.trim() ? "text-white" : "text-stone-400"}`}>
+              <Text className={`font-bold text-sm ${isGoalValid ? "text-white" : "text-stone-400"}`}>
                 Create Savings Goal
               </Text>
             </Pressable>
