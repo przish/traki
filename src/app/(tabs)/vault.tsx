@@ -6,11 +6,13 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useTraki } from "@/src/context/TrakiContext";
 import { formatCents, evaluateGoalUnlock, parseToCents } from "@/src/services/economyService";
 import { isValidNonEmptyText, isValidPositiveAmount } from "@/src/constants";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 const GOAL_ICONS = ["flight", "shield", "home", "school", "directions-car", "laptop-mac", "favorite", "star"];
 const GOAL_TONES = ["#EAE5F4", "#C9E7D2", "#FFF1D7", "#DCE8F0", "#F4D5CB"];
 
 export default function VaultScreen() {
+  const isDark = useColorScheme() === "dark";
   const { goals, profile, unlockGoal, depositToGoal, addSavingsGoal } = useTraki();
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showAddGoal, setShowAddGoal] = useState(false);
@@ -96,7 +98,7 @@ export default function VaultScreen() {
             <Text className="text-[10px] font-black uppercase tracking-widest text-[#AF2219]">
               Savings Vault
             </Text>
-            <Text className="text-2xl font-black text-stone-900">Goals & Targets</Text>
+            <Text className={`text-2xl font-black ${isDark ? "text-white" : "text-stone-900"}`}>Goals & Targets</Text>
           </View>
           <View className="flex-row items-center gap-1.5 bg-[#AF221915] px-3 py-1.5 rounded-full border border-[#AF221940]">
             <MaterialIcons name="stars" size={16} color="#AF2219" />
@@ -124,28 +126,28 @@ export default function VaultScreen() {
         )}
 
         {/* Two-Key Mechanic Explanation Card */}
-        <View className="bg-white rounded-2xl p-4 border border-[#AF221930] mb-5 shadow-2xs">
+        <View className={`rounded-2xl p-4 border mb-5 shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-[#AF221930]"}`}>
           <View className="flex-row items-center gap-2 mb-2">
             <View className="h-7 w-7 rounded-lg bg-[#AF2219] items-center justify-center">
               <MaterialIcons name="vpn-key" size={16} color="#FFFFFF" />
             </View>
-            <Text className="text-xs font-black text-stone-900 uppercase tracking-wide">
+            <Text className={`text-xs font-black uppercase tracking-wide ${isDark ? "text-white" : "text-stone-900"}`}>
               Two-Key Vault Mechanism
             </Text>
           </View>
-          <Text className="text-xs text-stone-600 leading-relaxed font-medium">
+          <Text className={`text-xs leading-relaxed font-medium ${isDark ? "text-stone-300" : "text-stone-600"}`}>
             To prevent impulsive spending on unlocked goals, each real-world target requires:
           </Text>
           <View className="mt-2.5 gap-1.5">
             <View className="flex-row items-center gap-2">
               <MaterialIcons name="check-circle" size={14} color="#3C9B55" />
-              <Text className="text-xs text-stone-700 font-semibold">
+              <Text className={`text-xs font-semibold ${isDark ? "text-stone-200" : "text-stone-700"}`}>
                 1. 100% Real-World Funded Balance
               </Text>
             </View>
             <View className="flex-row items-center gap-2">
               <MaterialIcons name="stars" size={14} color="#AF2219" />
-              <Text className="text-xs text-stone-700 font-semibold">
+              <Text className={`text-xs font-semibold ${isDark ? "text-stone-200" : "text-stone-700"}`}>
                 2. Conquered Boss TRK Tokens (from Weekly/Monthly victories)
               </Text>
             </View>
@@ -154,7 +156,7 @@ export default function VaultScreen() {
 
         {/* Savings Goals List */}
         <View className="flex-row items-center justify-between mb-2.5">
-          <Text className="text-xs font-black uppercase tracking-wider text-stone-600">
+          <Text className={`text-xs font-black uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
             Active Vault Targets
           </Text>
           <Pressable onPress={() => setShowAddGoal(!showAddGoal)}>
@@ -166,31 +168,31 @@ export default function VaultScreen() {
 
         {/* Add Goal Form */}
         {showAddGoal && (
-          <View className="bg-white rounded-2xl p-4 border border-[#AF221930] mb-4 shadow-2xs">
+          <View className={`rounded-2xl p-4 border mb-4 shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#AF221950]" : "bg-white border-[#AF221930]"}`}>
             <TextInput
               value={newGoalTitle}
               onChangeText={setNewGoalTitle}
               placeholder="Goal name (e.g. Tokyo Trip Fund)"
-              placeholderTextColor="#8B8988"
-              className="h-[44px] px-3 rounded-xl border border-stone-200 bg-[#FAF8F6] text-sm font-medium text-stone-900 mb-3"
+              placeholderTextColor={isDark ? "#707579" : "#8B8988"}
+              className={`h-[44px] px-3 rounded-xl border text-sm font-medium mb-3 ${isDark ? "border-[#303336] bg-[#101112] text-white" : "border-stone-200 bg-[#FAF8F6] text-stone-900"}`}
             />
             <TextInput
               value={newGoalTarget}
               onChangeText={setNewGoalTarget}
               placeholder="Target amount (e.g. 150000)"
-              placeholderTextColor="#8B8988"
+              placeholderTextColor={isDark ? "#707579" : "#8B8988"}
               keyboardType="numeric"
-              className="h-[44px] px-3 rounded-xl border border-stone-200 bg-[#FAF8F6] text-sm font-medium text-stone-900 mb-3"
+              className={`h-[44px] px-3 rounded-xl border text-sm font-medium mb-3 ${isDark ? "border-[#303336] bg-[#101112] text-white" : "border-stone-200 bg-[#FAF8F6] text-stone-900"}`}
             />
             <TextInput
               value={newGoalTrkRequired}
               onChangeText={setNewGoalTrkRequired}
               placeholder="TRK tokens required (e.g. 5)"
-              placeholderTextColor="#8B8988"
+              placeholderTextColor={isDark ? "#707579" : "#8B8988"}
               keyboardType="numeric"
-              className="h-[44px] px-3 rounded-xl border border-stone-200 bg-[#FAF8F6] text-sm font-medium text-stone-900 mb-3"
+              className={`h-[44px] px-3 rounded-xl border text-sm font-medium mb-3 ${isDark ? "border-[#303336] bg-[#101112] text-white" : "border-stone-200 bg-[#FAF8F6] text-stone-900"}`}
             />
-            <Text className="text-[11px] font-bold text-stone-500 mb-2">Icon</Text>
+            <Text className={`text-[11px] font-bold mb-2 ${isDark ? "text-stone-400" : "text-stone-500"}`}>Icon</Text>
             <View className="flex-row gap-2 mb-3 flex-wrap">
               {GOAL_ICONS.map((icon) => (
                 <Pressable
@@ -205,14 +207,14 @@ export default function VaultScreen() {
                 </Pressable>
               ))}
             </View>
-            <Text className="text-[11px] font-bold text-stone-500 mb-2">Tone</Text>
+            <Text className={`text-[11px] font-bold mb-2 ${isDark ? "text-stone-400" : "text-stone-500"}`}>Tone</Text>
             <View className="flex-row gap-2.5 mb-4">
               {GOAL_TONES.map((tone) => (
                 <Pressable
                   key={tone}
                   onPress={() => setNewGoalTone(tone)}
                   style={{ backgroundColor: tone }}
-                  className={`w-8 h-8 rounded-full ${newGoalTone === tone ? "border-2 border-stone-900" : "border border-stone-200"}`}
+                  className={`w-8 h-8 rounded-full ${newGoalTone === tone ? (isDark ? "border-2 border-white" : "border-2 border-stone-900") : "border border-stone-300"}`}
                 />
               ))}
             </View>
@@ -221,10 +223,10 @@ export default function VaultScreen() {
               disabled={!isGoalValid}
               className={`h-[44px] rounded-xl items-center justify-center ${isGoalValid
                 ? "bg-[#AF2219] active:bg-[#8F1E2C]"
-                : "bg-stone-200"
+                : isDark ? "bg-stone-800" : "bg-stone-200"
                 }`}
             >
-              <Text className={`font-bold text-sm ${isGoalValid ? "text-white" : "text-stone-400"}`}>
+              <Text className={`font-bold text-sm ${isGoalValid ? "text-white" : (isDark ? "text-stone-500" : "text-stone-400")}`}>
                 Create Savings Goal
               </Text>
             </Pressable>
@@ -232,14 +234,14 @@ export default function VaultScreen() {
         )}
 
         {goals.length === 0 && !showAddGoal ? (
-          <View className="bg-white rounded-2xl p-6 border border-stone-200 mb-5 items-center shadow-2xs">
+          <View className={`rounded-2xl p-6 border mb-5 items-center shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"}`}>
             <View className="h-16 w-16 rounded-2xl bg-[#AF221915] border-2 border-[#AF221930] items-center justify-center mb-3">
               <MaterialIcons name="savings" size={32} color="#AF2219" />
             </View>
-            <Text className="text-base font-black text-stone-900 text-center mb-1">
+            <Text className={`text-base font-black text-center mb-1 ${isDark ? "text-white" : "text-stone-900"}`}>
               No Savings Goals Yet
             </Text>
-            <Text className="text-xs text-stone-500 font-medium text-center leading-relaxed mb-4">
+            <Text className={`text-xs font-medium text-center leading-relaxed mb-4 ${isDark ? "text-stone-400" : "text-stone-500"}`}>
               Set a savings target to unlock the Vault.{"\n"}Earn TRK tokens from boss battles to unlock goals!
             </Text>
             <Pressable
@@ -263,7 +265,7 @@ export default function VaultScreen() {
               return (
                 <View
                   key={g.id}
-                  className="bg-white rounded-2xl p-4 border border-stone-200 shadow-2xs"
+                  className={`rounded-2xl p-4 border shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"}`}
                 >
                   <View className="flex-row items-start justify-between mb-2">
                     <View className="flex-row items-center gap-2.5">
@@ -271,8 +273,8 @@ export default function VaultScreen() {
                         <MaterialIcons name={g.icon as any} size={20} color="#AF2219" />
                       </View>
                       <View>
-                        <Text className="text-sm font-black text-stone-900">{g.title}</Text>
-                        <Text className="text-[11px] text-stone-500 font-medium">
+                        <Text className={`text-sm font-black ${isDark ? "text-white" : "text-stone-900"}`}>{g.title}</Text>
+                        <Text className={`text-[11px] font-medium ${isDark ? "text-stone-400" : "text-stone-500"}`}>
                           Target: {formatCents(g.target_amount)}
                         </Text>
                       </View>
@@ -281,11 +283,11 @@ export default function VaultScreen() {
                     <View
                       className={`px-2.5 py-1 rounded-full border ${g.is_unlocked
                         ? "bg-[#C9E7D2] border-[#3C9B55]/40"
-                        : "bg-stone-100 border-stone-200"
+                        : isDark ? "bg-stone-800 border-stone-700" : "bg-stone-100 border-stone-200"
                         }`}
                     >
                       <Text
-                        className={`text-[10px] font-black uppercase tracking-wider ${g.is_unlocked ? "text-[#1C5E2D]" : "text-stone-600"
+                        className={`text-[10px] font-black uppercase tracking-wider ${g.is_unlocked ? "text-[#1C5E2D]" : (isDark ? "text-stone-400" : "text-stone-600")
                           }`}
                       >
                         {g.is_unlocked ? "Unlocked" : "Locked"}
@@ -296,12 +298,12 @@ export default function VaultScreen() {
                   {/* Progress Bar */}
                   <View className="mt-2 mb-3">
                     <View className="flex-row justify-between mb-1">
-                      <Text className="text-[11px] font-bold text-stone-500">Funded Amount</Text>
-                      <Text className="text-[11px] font-black text-stone-900 tabular-nums">
+                      <Text className={`text-[11px] font-bold ${isDark ? "text-stone-400" : "text-stone-500"}`}>Funded Amount</Text>
+                      <Text className={`text-[11px] font-black tabular-nums ${isDark ? "text-white" : "text-stone-900"}`}>
                         {formatCents(g.current_amount)} ({fundedPercent}%)
                       </Text>
                     </View>
-                    <View className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
+                    <View className={`h-2 w-full rounded-full overflow-hidden ${isDark ? "bg-stone-800" : "bg-stone-100"}`}>
                       <View
                         style={{
                           width: `${fundedPercent}%`,
@@ -314,12 +316,12 @@ export default function VaultScreen() {
                   </View>
 
                   {/* Requirements Badges */}
-                  <View className="flex-row items-center justify-between pt-2 border-t border-stone-100">
+                  <View className={`flex-row items-center justify-between pt-2 border-t ${isDark ? "border-[#303336]" : "border-stone-100"}`}>
                     <View className="flex-row items-center gap-1.5">
                       <MaterialIcons
                         name="stars"
                         size={14}
-                        color={hasEnoughTokens ? "#AF2219" : "#8B8988"}
+                        color={hasEnoughTokens ? "#AF2219" : (isDark ? "#707579" : "#8B8988")}
                       />
                       <Text
                         className={`text-[11px] font-bold ${hasEnoughTokens ? "text-[#AF2219]" : "text-stone-400"
@@ -333,9 +335,9 @@ export default function VaultScreen() {
                       <View className="flex-row gap-2">
                         <Pressable
                           onPress={() => handleDepositToGoal(g.id)}
-                          className="px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-200"
+                          className={`px-2.5 py-1 rounded-lg border ${isDark ? "bg-[#25282B] border-[#303336]" : "bg-stone-100 border-stone-200"}`}
                         >
-                          <Text className="text-[11px] font-bold text-stone-700">+₱500</Text>
+                          <Text className={`text-[11px] font-bold ${isDark ? "text-stone-200" : "text-stone-700"}`}>+₱500</Text>
                         </Pressable>
 
                         <Pressable

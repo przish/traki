@@ -6,6 +6,7 @@ import { useAuth } from "@/src/context/AuthContext";
 import { AuthProviderType } from "@/src/types";
 import { isAppleAuthAvailable, isGoogleOAuthReady } from "@/src/services/authService";
 import { THEME_CONFIG } from "@/src/constants";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import SSOModal, { SelectedSSOAccount } from "./SSOModal";
 
 export interface LoginMethodsProps {
@@ -152,6 +153,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
     }
   };
 
+  const isDark = useColorScheme() === "dark";
   const isGoogleLoading = activeButtonLoading === "google";
   const isAppleLoading = activeButtonLoading === "apple";
   const isStingrayLoading = activeButtonLoading === "stingray";
@@ -162,9 +164,9 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
       {/* Google SSO Button - Opens Google SSO Sheet / Modal */}
       <Pressable
         disabled={isDisabled}
-        className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
-          isDisabled ? "opacity-60" : ""
-        }`}
+        className={`flex-row items-center justify-center gap-2.5 w-full border rounded-xl h-[42px] active:bg-[#AF221908] ${
+          isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-[#A13024]/40"
+        } ${isDisabled ? "opacity-60" : ""}`}
         onPress={() => handleProviderPress("google")}
       >
         {isGoogleLoading ? (
@@ -177,7 +179,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
               className="w-4 h-4"
               resizeMode="contain"
             />
-            <Text className="text-center font-bold text-stone-800 text-sm">
+            <Text className={`text-center font-bold text-sm ${isDark ? "text-white" : "text-stone-800"}`}>
               Continue with Google
             </Text>
           </View>
@@ -187,9 +189,9 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
       {/* Apple SSO Button - Opens Apple SSO Sheet / Modal */}
       <Pressable
         disabled={isDisabled}
-        className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
-          isDisabled ? "opacity-60" : ""
-        }`}
+        className={`flex-row items-center justify-center gap-2.5 w-full border rounded-xl h-[42px] active:bg-[#AF221908] ${
+          isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-[#A13024]/40"
+        } ${isDisabled ? "opacity-60" : ""}`}
         onPress={() => handleProviderPress("apple")}
       >
         {isAppleLoading ? (
@@ -198,11 +200,11 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
           <View pointerEvents="none" className="flex-row items-center justify-center gap-2.5">
             <Image
               source={require("../assets/images/logos/apple-logo.png")}
-              style={{ width: 18, height: 18 }}
+              style={{ width: 18, height: 18, tintColor: isDark ? "#FFFFFF" : undefined }}
               className="w-4 h-4"
               resizeMode="contain"
             />
-            <Text className="text-center font-bold text-stone-800 text-sm">
+            <Text className={`text-center font-bold text-sm ${isDark ? "text-white" : "text-stone-800"}`}>
               Continue with Apple
             </Text>
           </View>
@@ -212,9 +214,9 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
       {/* Stingray Developer SSO Button */}
       <Pressable
         disabled={isDisabled}
-        className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
-          isDisabled ? "opacity-60" : ""
-        }`}
+        className={`flex-row items-center justify-center gap-2.5 w-full border rounded-xl h-[42px] active:bg-[#AF221908] ${
+          isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-[#A13024]/40"
+        } ${isDisabled ? "opacity-60" : ""}`}
         onPress={() => handleProviderPress("stingray")}
       >
         {isStingrayLoading ? (
@@ -227,7 +229,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
               className="w-8 h-4"
               resizeMode="contain"
             />
-            <Text className="text-center font-bold text-stone-800 text-sm">
+            <Text className={`text-center font-bold text-sm ${isDark ? "text-white" : "text-stone-800"}`}>
               Continue with Stingray
             </Text>
           </View>

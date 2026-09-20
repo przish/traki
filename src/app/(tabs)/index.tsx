@@ -10,10 +10,12 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useTraki } from "@/src/context/TrakiContext";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import Continue from "@/components/continue";
 import PartnerCard from "@/components/PartnerCard";
 
 export default function CombatScreen() {
+  const isDark = useColorScheme() === "dark";
   const { profile, bosses, logTransaction, wallets, categories, refreshData } = useTraki();
   const [activeTier, setActiveTier] = useState<"daily" | "weekly" | "monthly">("daily");
   const [floatingDamage, setFloatingDamage] = useState<{ id: number; text: string; isCrit: boolean } | null>(null);
@@ -57,14 +59,14 @@ export default function CombatScreen() {
             <Text className="text-2xl font-black text-stone-900">Awaiting Bosses</Text>
           </View>
 
-          <View className="bg-white rounded-3xl p-8 border border-stone-200 items-center justify-center shadow-2xs">
+          <View className={`rounded-3xl p-8 border items-center justify-center shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"}`}>
             <View className="h-20 w-20 rounded-2xl bg-[#AF221915] border-2 border-[#AF221930] items-center justify-center mb-4">
               <MaterialIcons name="sports-kabaddi" size={40} color="#AF2219" />
             </View>
-            <Text className="text-lg font-black text-stone-900 text-center mb-2">
+            <Text className={`text-lg font-black text-center mb-2 ${isDark ? "text-white" : "text-stone-900"}`}>
               Boss encounters are spawning...
             </Text>
-            <Text className="text-xs text-stone-500 font-medium text-center leading-relaxed">
+            <Text className={`text-xs font-medium text-center leading-relaxed ${isDark ? "text-stone-400" : "text-stone-500"}`}>
               Your first bosses will appear momentarily.{"\n"}Start logging expenses to deal damage!
             </Text>
 
@@ -79,10 +81,12 @@ export default function CombatScreen() {
 
               <Pressable
                 onPress={() => refreshData()}
-                className="h-[42px] px-4 rounded-xl border border-stone-200 bg-white items-center justify-center active:bg-stone-50 flex-row gap-1 shadow-2xs"
+                className={`h-[42px] px-4 rounded-xl border items-center justify-center active:opacity-80 flex-row gap-1 shadow-2xs ${
+                  isDark ? "bg-[#25282B] border-[#303336]" : "border-stone-200 bg-white active:bg-stone-50"
+                }`}
               >
-                <MaterialIcons name="refresh" size={16} color="#57534E" />
-                <Text className="text-stone-700 font-bold text-xs">Refresh</Text>
+                <MaterialIcons name="refresh" size={16} color={isDark ? "#AAA7A5" : "#57534E"} />
+                <Text className={`font-bold text-xs ${isDark ? "text-stone-300" : "text-stone-700"}`}>Refresh</Text>
               </Pressable>
             </View>
           </View>
@@ -106,7 +110,7 @@ export default function CombatScreen() {
               <Text className="text-[10px] font-black uppercase tracking-widest text-[#AF2219]">
                 Duo Habit Streak
               </Text>
-              <Text className="text-base font-black text-stone-900">
+              <Text className={`text-base font-black ${isDark ? "text-white" : "text-stone-900"}`}>
                 {profile?.current_streak ?? 1} Days Active
               </Text>
             </View>
@@ -114,14 +118,14 @@ export default function CombatScreen() {
 
           {/* Currencies Pill Bag */}
           <View className="flex-row items-center gap-2">
-            <View className="flex-row items-center gap-1 bg-[#FFF1D7] px-2.5 py-1.5 rounded-full border border-[#F1B64A]/50">
+            <View className={`flex-row items-center gap-1 px-2.5 py-1.5 rounded-full border ${isDark ? "bg-[#2A2318] border-[#F1B64A]/40" : "bg-[#FFF1D7] border-[#F1B64A]/50"}`}>
               <MaterialIcons name="monetization-on" size={15} color="#C4880E" />
               <Text className="text-xs font-black text-[#A87610]">
                 {profile?.gold ?? 0}
               </Text>
             </View>
 
-            <View className="flex-row items-center gap-1 bg-[#AF221915] px-2.5 py-1.5 rounded-full border border-[#AF221940]">
+            <View className={`flex-row items-center gap-1 px-2.5 py-1.5 rounded-full border ${isDark ? "bg-[#AF221925] border-[#AF221950]" : "bg-[#AF221915] border-[#AF221940]"}`}>
               <MaterialIcons name="stars" size={15} color="#AF2219" />
               <Text className="text-xs font-black text-[#AF2219]">
                 {profile?.trk_tokens ?? 0} TRK
@@ -131,12 +135,12 @@ export default function CombatScreen() {
         </View>
 
         {/* Boss Tier Selector Tabs */}
-        <View className="flex-row p-1 bg-stone-100 rounded-2xl border border-stone-200 mb-4">
+        <View className={`flex-row p-1 rounded-2xl border mb-4 ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-stone-100 border-stone-200"}`}>
           <Pressable
             onPress={() => setActiveTier("daily")}
             className={`flex-1 py-2 rounded-xl items-center justify-center ${activeTier === "daily" ? "bg-[#AF2219] shadow-xs" : ""}`}
           >
-            <Text className={`text-xs font-black ${activeTier === "daily" ? "text-white" : "text-stone-600"}`}>
+            <Text className={`text-xs font-black ${activeTier === "daily" ? "text-white" : isDark ? "text-stone-400" : "text-stone-600"}`}>
               Daily Mob
             </Text>
           </Pressable>
@@ -145,7 +149,7 @@ export default function CombatScreen() {
             onPress={() => setActiveTier("weekly")}
             className={`flex-1 py-2 rounded-xl items-center justify-center ${activeTier === "weekly" ? "bg-[#AF2219] shadow-xs" : ""}`}
           >
-            <Text className={`text-xs font-black ${activeTier === "weekly" ? "text-white" : "text-stone-600"}`}>
+            <Text className={`text-xs font-black ${activeTier === "weekly" ? "text-white" : isDark ? "text-stone-400" : "text-stone-600"}`}>
               Weekly Miniboss
             </Text>
           </Pressable>
@@ -154,14 +158,14 @@ export default function CombatScreen() {
             onPress={() => setActiveTier("monthly")}
             className={`flex-1 py-2 rounded-xl items-center justify-center ${activeTier === "monthly" ? "bg-[#AF2219] shadow-xs" : ""}`}
           >
-            <Text className={`text-xs font-black ${activeTier === "monthly" ? "text-white" : "text-stone-600"}`}>
+            <Text className={`text-xs font-black ${activeTier === "monthly" ? "text-white" : isDark ? "text-stone-400" : "text-stone-600"}`}>
               Monthly Titan
             </Text>
           </Pressable>
         </View>
 
         {/* 16-Bit Combat Stage Arena */}
-        <View className="bg-white rounded-3xl p-5 border border-[#AF221930] shadow-sm mb-4 relative overflow-hidden">
+        <View className={`rounded-3xl p-5 border shadow-sm mb-4 relative overflow-hidden ${isDark ? "bg-[#1B1D1F] border-[#AF221950]" : "bg-white border-[#AF221930]"}`}>
           {/* Top Stage Badges */}
           <View className="flex-row justify-between items-center mb-3">
             <View className="bg-[#AF221915] border border-[#AF221930] px-2.5 py-1 rounded-lg">
@@ -171,14 +175,14 @@ export default function CombatScreen() {
             </View>
             <View className="flex-row items-center gap-1">
               <MaterialIcons name="shield" size={14} color="#AF2219" />
-              <Text className="text-xs font-bold text-stone-600">
+              <Text className={`text-xs font-bold ${isDark ? "text-stone-400" : "text-stone-600"}`}>
                 {profile?.streak_shields ?? 1} Shields Active
               </Text>
             </View>
           </View>
 
           {/* Boss Display Stage */}
-          <View className="h-44 bg-[#FAF8F6] rounded-2xl items-center justify-center border border-stone-200 relative mb-4">
+          <View className={`h-44 rounded-2xl items-center justify-center border relative mb-4 ${isDark ? "bg-[#101112] border-[#303336]" : "bg-[#FAF8F6] border-stone-200"}`}>
             <View className="items-center">
               <View className="w-20 h-20 rounded-2xl bg-[#AF221915] border-2 border-[#AF2219] items-center justify-center mb-2 shadow-sm">
                 <MaterialIcons
@@ -193,10 +197,10 @@ export default function CombatScreen() {
                   color="#AF2219"
                 />
               </View>
-              <Text className="text-base font-black text-stone-900 tracking-tight">
+              <Text className={`text-base font-black tracking-tight ${isDark ? "text-white" : "text-stone-900"}`}>
                 {currentBoss.name}
               </Text>
-              <Text className="text-xs font-bold text-stone-500">
+              <Text className={`text-xs font-bold ${isDark ? "text-stone-400" : "text-stone-500"}`}>
                 Loot: +{currentBoss.gold_reward} Gold &bull; +{currentBoss.exp_reward} EXP
                 {currentBoss.trk_reward > 0 ? ` &bull; +${currentBoss.trk_reward} TRK` : ""}
               </Text>
@@ -217,14 +221,14 @@ export default function CombatScreen() {
           {/* Health Bar with Retro Border */}
           <View className="mb-2">
             <View className="flex-row justify-between mb-1.5 items-center">
-              <Text className="text-xs font-bold text-stone-700 uppercase tracking-wide">
+              <Text className={`text-xs font-bold uppercase tracking-wide ${isDark ? "text-stone-300" : "text-stone-700"}`}>
                 Boss Health
               </Text>
               <Text className="text-xs font-black text-[#AF2219] tabular-nums">
                 {currentBoss.current_hp} / {currentBoss.max_hp} HP ({bossHpPercent}%)
               </Text>
             </View>
-            <View className="h-3.5 w-full bg-stone-100 rounded-full border border-stone-300 overflow-hidden p-0.5">
+            <View className={`h-3.5 w-full rounded-full border overflow-hidden p-0.5 ${isDark ? "bg-stone-800 border-stone-700" : "bg-stone-100 border-stone-300"}`}>
               <View
                 style={{
                   width: `${bossHpPercent}%`,
@@ -237,8 +241,8 @@ export default function CombatScreen() {
           </View>
 
           {/* Cleave Formula Lore Box */}
-          <View className="bg-[#AF221908] border border-[#AF221920] rounded-xl p-2.5 mt-2">
-            <Text className="text-[10px] font-bold text-stone-600 text-center">
+          <View className={`border rounded-xl p-2.5 mt-2 ${isDark ? "bg-[#AF221915] border-[#AF221930]" : "bg-[#AF221908] border-[#AF221920]"}`}>
+            <Text className={`text-[10px] font-bold text-center ${isDark ? "text-stone-300" : "text-stone-600"}`}>
               ⚔️ Cleave Engine: Every log strikes 100% Daily Mob, 35% Weekly Miniboss & 15% Monthly Titan!
             </Text>
           </View>
@@ -254,7 +258,9 @@ export default function CombatScreen() {
               />
               <Pressable
                 onPress={handleQuickStrike}
-                className="h-[44px] rounded-xl bg-white border border-[#A13024] items-center justify-center active:bg-[#AF221910]"
+                className={`h-[44px] rounded-xl border items-center justify-center active:opacity-80 ${
+                  isDark ? "bg-[#1B1D1F] border-[#A13024]" : "bg-white border-[#A13024] active:bg-[#AF221910]"
+                }`}
               >
                 <Text className="text-[#AF2219] font-bold text-sm">
                   Quick Strike (Test Log ₱50)
@@ -262,7 +268,7 @@ export default function CombatScreen() {
               </Pressable>
             </>
           ) : (
-            <View className="bg-[#AF221908] border border-[#AF221920] rounded-2xl p-4 items-center">
+            <View className={`border rounded-2xl p-4 items-center ${isDark ? "bg-[#1B1D1F] border-[#AF221940]" : "bg-[#AF221908] border-[#AF221920]"}`}>
               <MaterialIcons name="info-outline" size={20} color="#AF2219" />
               <Text className="text-xs font-bold text-[#AF2219] mt-2 text-center">
                 Create a wallet & category in the Ledger tab to start striking bosses!
