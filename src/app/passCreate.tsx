@@ -16,9 +16,11 @@ import Continue from "../../components/continue";
 import BackButton from "../../components/back-button";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { isValidPassword, doPasswordsMatch } from "@/src/constants";
+import { useAuth } from "@/src/context/AuthContext";
 
 export default function PassCreate() {
   const router = useRouter();
+  const { signInWithSandbox } = useAuth();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -40,17 +42,17 @@ export default function PassCreate() {
 
   const errorText = getValidationHint();
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     if (!canSubmit || isLoading) return;
     setIsLoading(true);
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {}
 
-    setTimeout(() => {
-      setIsLoading(false);
-      router.replace("/(tabs)");
-    }, 400);
+    // Create a persisted auth session so AuthGuard accepts /(tabs)
+    await signInWithSandbox("stingray");
+    setIsLoading(false);
+    router.replace("/(tabs)");
   };
 
   return (

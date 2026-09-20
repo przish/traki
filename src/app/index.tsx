@@ -4,9 +4,11 @@ import { Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import Continue from "../../components/continue";
+import { useAuth } from "@/src/context/AuthContext";
 
 export default function Index() {
   const router = useRouter();
+  const { signInWithSandbox, isAuthenticating } = useAuth();
 
   const handleStart = () => {
     try {
@@ -15,11 +17,15 @@ export default function Index() {
     router.push("/signUp");
   };
 
-  const handleDirectDemo = () => {
+  const handleDirectDemo = async () => {
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {}
-    router.replace("/(tabs)");
+    // Persist a demo session first so AuthGuard accepts the navigation
+    const result = await signInWithSandbox("stingray");
+    if (result.success) {
+      router.replace("/(tabs)");
+    }
   };
 
   return (
@@ -64,10 +70,11 @@ export default function Index() {
 
           <Pressable
             onPress={handleDirectDemo}
+            disabled={isAuthenticating}
             className="items-center py-2"
           >
             <Text className="text-stone-400 text-xs font-semibold underline">
-              Jump Straight In (Quick Demo)
+              {isAuthenticating ? "Loading..." : "Jump Straight In (Quick Demo)"}
             </Text>
           </Pressable>
         </View>

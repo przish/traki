@@ -37,21 +37,95 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Restore stored session on mount
+  // Restore stored session on mount and subscribe to Supabase auth events.
+  // This is the single source of truth for login state — it must run once on
+  // app boot and resolve before any screen makes auth-dependent decisions.
   useEffect(() => {
+    let mounted = true;
+
     async function restoreSession() {
       try {
+        // 1. Restore local (SQLite / localStorage) session first — works for
+        //    sandbox/demo accounts and native SQLite sessions.
         const existing = await getCurrentAuthUser();
-        if (existing) {
+        if (mounted && existing) {
           setUser(existing);
         }
       } catch (e) {
         console.warn("Failed to restore auth session:", e);
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     }
+
     restoreSession();
+
+    // 2. Subscribe to Supabase auth state changes so we never miss a
+    //    SIGNED_IN / SIGNED_OUT / TOKEN_REFRESHED event from the server.
+    //    This covers: OAuth redirects, token auto-refresh, server-side logouts.
+    let unsubSupabase: (() => void) | null = null;
+    try {
+      // Lazy import to avoid crashes when Supabase is not configured
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { getSupabaseClient, isSupabaseConfigured } = require("../services/supabaseClient");
+      if (isSupabaseConfigured()) {
+        const supabase = getSupabaseClient();
+        if (supabase) {
+          const { data: listenerData } = supabase.auth.onAuthStateChange(
+            async (event: string, session: any) => {
+              if (!mounted) return;
+
+              if (event === "SIGNED_IN" && session?.user) {
+                const sbUser = session.user;
+                const authUser: AuthUser = {
+                  id: sbUser.id,
+                  email: sbUser.email || "",
+                  displayName:
+                    sbUser.user_metadata?.full_name ||
+                    sbUser.user_metadata?.name ||
+                    sbUser.email ||
+                    "Adventurer",
+                  avatarUrl:
+                    sbUser.user_metadata?.avatar_url ||
+                    sbUser.user_metadata?.picture,
+                  provider:
+                    (sbUser.app_metadata?.provider as AuthUser["provider"]) ||
+                    "google",
+                  token: session.access_token,
+                  createdAt: sbUser.created_at || new Date().toISOString(),
+                };
+                setUser(authUser);
+                setIsLoading(false);
+              } else if (event === "SIGNED_OUT") {
+                // Only clear if we were explicitly signed out server-side.
+                // Do NOT clear on TOKEN_REFRESHED or other benign events.
+                const stillHasLocal = await getCurrentAuthUser();
+                if (!stillHasLocal) {
+                  setUser(null);
+                }
+                setIsLoading(false);
+              } else if (event === "TOKEN_REFRESHED" && session?.user) {
+                // Token refreshed — update user silently without disrupting UX.
+                setUser((prev) => {
+                  if (!prev) return prev;
+                  return { ...prev, token: session.access_token };
+                });
+              }
+            }
+          );
+          unsubSupabase = () => listenerData?.subscription?.unsubscribe();
+        }
+      }
+    } catch {
+      // Supabase not configured or failed to load — local auth only, safe to ignore.
+    }
+
+    return () => {
+      mounted = false;
+      unsubSupabase?.();
+    };
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
@@ -139,6 +213,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await signOutUser();
       setUser(null);
+      // Also sign out from Supabase if configured
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { getSupabaseClient, isSupabaseConfigured } = require("../services/supabaseClient");
+        if (isSupabaseConfigured()) {
+          const supabase = getSupabaseClient();
+          if (supabase) {
+            await supabase.auth.signOut();
+          }
+        }
+      } catch {
+        // Supabase sign-out is best-effort — local clear already done above.
+      }
     } finally {
       setIsLoading(false);
     }

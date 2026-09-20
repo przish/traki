@@ -1,4 +1,33 @@
 import { Platform } from "react-native";
+
+// Web-only localStorage key for auth session persistence
+const WEB_AUTH_KEY = "traki_auth_session";
+
+function webSaveSession(session: any) {
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(WEB_AUTH_KEY, JSON.stringify(session));
+    }
+  } catch {}
+}
+
+function webLoadSession(): any | null {
+  try {
+    if (typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(WEB_AUTH_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }
+  } catch {}
+  return null;
+}
+
+function webClearSession() {
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem(WEB_AUTH_KEY);
+    }
+  } catch {}
+}
 import {
   Wallet,
   Category,
@@ -408,6 +437,11 @@ export const TrakiStorage = {
 
   saveAuthSession: async (session: AuthSession): Promise<void> => {
     memoryStore.authSession = session;
+    // Web: persist to localStorage so session survives JS reloads
+    if (Platform.OS === "web") {
+      webSaveSession(session);
+      return;
+    }
     const db = await getDatabase();
     if (!db) return;
     await db.runAsync("DELETE FROM auth_session");
@@ -427,15 +461,29 @@ export const TrakiStorage = {
   },
 
   getAuthSession: async (): Promise<AuthSession | null> => {
+    // Web: read from localStorage first, then fall back to memoryStore
+    if (Platform.OS === "web") {
+      const webSession = webLoadSession();
+      if (webSession) {
+        memoryStore.authSession = webSession;
+      }
+      return memoryStore.authSession;
+    }
     const db = await getDatabase();
     if (!db) return memoryStore.authSession;
     const row = await db.getFirstAsync("SELECT * FROM auth_session LIMIT 1");
     if (!row) return memoryStore.authSession;
-    return row as AuthSession;
+    const session = row as AuthSession;
+    memoryStore.authSession = session;
+    return session;
   },
 
   clearAuthSession: async (): Promise<void> => {
     memoryStore.authSession = null;
+    if (Platform.OS === "web") {
+      webClearSession();
+      return;
+    }
     const db = await getDatabase();
     if (!db) return;
     await db.runAsync("DELETE FROM auth_session");
