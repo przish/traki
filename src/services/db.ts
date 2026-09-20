@@ -125,6 +125,7 @@ export async function getDatabase() {
   }
   if (!dbInstance) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const SQLite = require("expo-sqlite");
       dbInstance = await SQLite.openDatabaseAsync("traki.db");
       await initializeDatabase(dbInstance);
@@ -171,6 +172,7 @@ async function initializeDatabase(db: any) {
     CREATE INDEX IF NOT EXISTS idx_tx_created ON transactions(created_at);
     CREATE INDEX IF NOT EXISTS idx_tx_wallet ON transactions(wallet_id);
     CREATE INDEX IF NOT EXISTS idx_tx_cat ON transactions(category_id);
+    CREATE INDEX IF NOT EXISTS idx_boss_tier ON boss_encounters(tier);
 
     CREATE TABLE IF NOT EXISTS player_profile (
       id TEXT PRIMARY KEY,
@@ -213,6 +215,57 @@ async function initializeDatabase(db: any) {
       tone TEXT NOT NULL
     );
   `);
+
+  const profileRow = await db.getFirstAsync("SELECT id FROM player_profile LIMIT 1");
+  if (!profileRow) {
+    await db.runAsync(
+      `INSERT INTO player_profile (id, level, exp, gold, trk_tokens, current_streak, highest_streak, streak_shields, last_logged_date, partner_name, partner_streak)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        memoryStore.profile.id,
+        memoryStore.profile.level,
+        memoryStore.profile.exp,
+        memoryStore.profile.gold,
+        memoryStore.profile.trk_tokens,
+        memoryStore.profile.current_streak,
+        memoryStore.profile.highest_streak,
+        memoryStore.profile.streak_shields,
+        memoryStore.profile.last_logged_date,
+        memoryStore.profile.partner_name,
+        memoryStore.profile.partner_streak,
+      ]
+    );
+
+    for (const w of memoryStore.wallets) {
+      await db.runAsync(
+        `INSERT OR IGNORE INTO wallets (id, name, type, balance, currency, color) VALUES (?, ?, ?, ?, ?, ?)`,
+        [w.id, w.name, w.type, w.balance, w.currency, w.color]
+      );
+    }
+
+    for (const c of memoryStore.categories) {
+      await db.runAsync(
+        `INSERT OR IGNORE INTO categories (id, name, icon, budget_cap, color) VALUES (?, ?, ?, ?, ?)`,
+        [c.id, c.name, c.icon, c.budget_cap ?? 500000, c.color]
+      );
+    }
+
+    for (const b of memoryStore.bosses) {
+      await db.runAsync(
+        `INSERT OR IGNORE INTO boss_encounters (id, tier, name, title, max_hp, current_hp, gold_reward, trk_reward, exp_reward, sprite_key, expires_at, is_defeated)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [b.id, b.tier, b.name, b.title, b.max_hp, b.current_hp, b.gold_reward, b.trk_reward, b.exp_reward, b.sprite_key, b.expires_at, b.is_defeated]
+      );
+    }
+
+    for (const g of memoryStore.goals) {
+      await db.runAsync(
+        `INSERT OR IGNORE INTO savings_goals (id, title, target_amount, current_amount, trk_tokens_required, is_unlocked, category, icon, tone)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [g.id, g.title, g.target_amount, g.current_amount, g.trk_tokens_required, g.is_unlocked, g.category, g.icon, g.tone]
+      );
+    }
+  }
 }
 
 export const TrakiStorage = {
