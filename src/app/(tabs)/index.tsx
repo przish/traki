@@ -11,12 +11,12 @@ import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useTraki } from "@/src/context/TrakiContext";
 import Continue from "@/components/continue";
+import PartnerCard from "@/components/PartnerCard";
 
 export default function CombatScreen() {
   const { profile, bosses, logTransaction, wallets, categories } = useTraki();
   const [activeTier, setActiveTier] = useState<"daily" | "weekly" | "monthly">("daily");
   const [floatingDamage, setFloatingDamage] = useState<{ id: number; text: string; isCrit: boolean } | null>(null);
-  const [partnerPoked, setPartnerPoked] = useState(false);
 
   const dailyBoss = bosses.find((b) => b.tier === "daily");
   const weeklyBoss = bosses.find((b) => b.tier === "weekly");
@@ -39,14 +39,6 @@ export default function CombatScreen() {
     const dmgText = res.isCrit ? `CRIT! -${res.totalDamage}` : `-${res.totalDamage} DMG`;
     setFloatingDamage({ id: Date.now(), text: dmgText, isCrit: res.isCrit });
     setTimeout(() => setFloatingDamage(null), 1400);
-  };
-
-  const handlePokePartner = () => {
-    try {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch { }
-    setPartnerPoked(true);
-    setTimeout(() => setPartnerPoked(false), 3000);
   };
 
   const bossHpPercent = currentBoss
@@ -261,43 +253,8 @@ export default function CombatScreen() {
           )}
         </View>
 
-        {/* Co-Op Duo Banner */}
-        {profile?.partner_name ? (
-          <View className="bg-white rounded-2xl p-4 border border-stone-200 mb-4 flex-row items-center justify-between shadow-2xs">
-            <View className="flex-row items-center gap-3">
-              <View className="h-10 w-10 rounded-full bg-[#AF221915] border border-[#AF221930] items-center justify-center">
-                <MaterialIcons name="favorite" size={20} color="#AF2219" />
-              </View>
-              <View>
-                <Text className="text-xs font-bold text-stone-900">
-                  Partner: {profile.partner_name}
-                </Text>
-                <Text className="text-[11px] text-stone-500 font-medium">
-                  {profile.partner_streak ?? 0}-Day Shared Streak Sync
-                </Text>
-              </View>
-            </View>
-
-            <Pressable
-              onPress={handlePokePartner}
-              className="px-3 py-1.5 rounded-lg bg-[#AF221915] border border-[#AF221940]"
-            >
-              <Text className="text-xs font-bold text-[#AF2219]">
-                {partnerPoked ? "Poked! ❤️" : "Poke Partner"}
-              </Text>
-            </Pressable>
-          </View>
-        ) : (
-          <View className="bg-white rounded-2xl p-4 border border-stone-200 mb-4 items-center shadow-2xs">
-            <View className="flex-row items-center gap-2 mb-1">
-              <MaterialIcons name="people" size={18} color="#AF2219" />
-              <Text className="text-xs font-bold text-stone-900">No partner linked yet</Text>
-            </View>
-            <Text className="text-[11px] text-stone-500 font-medium text-center">
-              Connect with your partner in the Profile tab to unlock Duo Streaks!
-            </Text>
-          </View>
-        )}
+        {/* Co-Op Duo Partnership Card */}
+        <PartnerCard showUnlinkOption={false} className="mb-4" />
       </ScrollView>
     </ScreenContainer>
   );
