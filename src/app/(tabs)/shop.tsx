@@ -5,6 +5,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useTraki } from "@/src/context/TrakiContext";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 interface ShopItem {
   id: string;
@@ -43,6 +44,7 @@ const ITEMS: ShopItem[] = [
 ];
 
 export default function ShopScreen() {
+  const isDark = useColorScheme() === "dark";
   const router = useRouter();
   const { profile, buyShopItem } = useTraki();
   const [toastMsg, setToastMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -80,12 +82,12 @@ export default function ShopScreen() {
             <Text className="text-[10px] font-black uppercase tracking-widest text-[#AF2219]">
               Arcade Merchant
             </Text>
-            <Text className="text-2xl font-black text-stone-900">Item Shop</Text>
+            <Text className={`text-2xl font-black ${isDark ? "text-white" : "text-stone-900"}`}>Item Shop</Text>
           </View>
 
-          <View className="flex-row items-center gap-1.5 bg-[#FFF1D7] px-3 py-1.5 rounded-full border border-[#F1B64A]/50 shadow-2xs">
+          <View className={`flex-row items-center gap-1.5 px-3 py-1.5 rounded-full border shadow-2xs ${isDark ? "bg-[#25282B] border-[#F1B64A]/40" : "bg-[#FFF1D7] border-[#F1B64A]/50"}`}>
             <MaterialIcons name="monetization-on" size={16} color="#C4880E" />
-            <Text className="text-xs font-black text-[#A87610]">
+            <Text className={`text-xs font-black ${isDark ? "text-[#F1B64A]" : "text-[#A87610]"}`}>
               {profile?.gold ?? 0} Gold
             </Text>
           </View>
@@ -111,27 +113,27 @@ export default function ShopScreen() {
         )}
 
         {/* Active Inventory Highlights */}
-        <View className="bg-white rounded-2xl p-4 border border-[#AF221930] mb-5 shadow-2xs">
-          <Text className="text-xs font-black text-stone-900 uppercase tracking-wide mb-3">
+        <View className={`rounded-2xl p-4 border mb-5 shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-[#AF221930]"}`}>
+          <Text className={`text-xs font-black uppercase tracking-wide mb-3 ${isDark ? "text-white" : "text-stone-900"}`}>
             Equipped Gear & Protections
           </Text>
           <View className="flex-row gap-3">
-            <View className="flex-1 bg-[#AF221915] p-3 rounded-xl border border-[#AF221930] items-center">
+            <View className={`flex-1 p-3 rounded-xl border items-center ${isDark ? "bg-[#AF221920] border-[#AF221940]" : "bg-[#AF221915] border-[#AF221930]"}`}>
               <MaterialIcons name="shield" size={22} color="#AF2219" />
               <Text className="text-lg font-black text-[#AF2219] mt-1">
                 {profile?.streak_shields ?? 1}
               </Text>
-              <Text className="text-[10px] font-bold text-stone-600 uppercase tracking-wider">
+              <Text className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
                 Streak Shields
               </Text>
             </View>
 
-            <View className="flex-1 bg-[#FFF1D7] p-3 rounded-xl border border-[#F1B64A]/40 items-center">
+            <View className={`flex-1 p-3 rounded-xl border items-center ${isDark ? "bg-[#25282B] border-[#F1B64A]/30" : "bg-[#FFF1D7] border-[#F1B64A]/40"}`}>
               <MaterialIcons name="local-fire-department" size={22} color="#C4880E" />
-              <Text className="text-lg font-black text-[#A87610] mt-1">
+              <Text className={`text-lg font-black mt-1 ${isDark ? "text-[#F1B64A]" : "text-[#A87610]"}`}>
                 {profile?.current_streak ?? 1}x
               </Text>
-              <Text className="text-[10px] font-bold text-stone-600 uppercase tracking-wider">
+              <Text className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
                 Streak Multiplier
               </Text>
             </View>
@@ -139,7 +141,7 @@ export default function ShopScreen() {
         </View>
 
         {/* Shop Items Catalog */}
-        <Text className="text-xs font-black uppercase tracking-wider text-stone-600 mb-2.5">
+        <Text className={`text-xs font-black uppercase tracking-wider mb-2.5 ${isDark ? "text-stone-400" : "text-stone-600"}`}>
           Arcade Supplies
         </Text>
 
@@ -149,7 +151,7 @@ export default function ShopScreen() {
             return (
               <View
                 key={item.id}
-                className="bg-white rounded-2xl p-4 border border-stone-200 shadow-2xs"
+                className={`rounded-2xl p-4 border shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"}`}
               >
                 <View className="flex-row items-start justify-between">
                   <View className="flex-row items-center gap-3 flex-1 pr-3">
@@ -157,8 +159,8 @@ export default function ShopScreen() {
                       <MaterialIcons name={item.icon as any} size={22} color="#AF2219" />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-sm font-black text-stone-900">{item.title}</Text>
-                      <Text className="text-xs text-stone-500 mt-0.5 leading-relaxed font-medium">
+                      <Text className={`text-sm font-black ${isDark ? "text-white" : "text-stone-900"}`}>{item.title}</Text>
+                      <Text className={`text-xs mt-0.5 leading-relaxed font-medium ${isDark ? "text-stone-400" : "text-stone-500"}`}>
                         {item.detail}
                       </Text>
                     </View>
@@ -167,17 +169,17 @@ export default function ShopScreen() {
                   <Pressable
                     onPress={() => handleBuy(item)}
                     className={`px-3.5 py-2 rounded-xl flex-row items-center gap-1.5 shadow-2xs ${
-                      canAfford ? "bg-[#AF2219] active:bg-[#8F1E2C]" : "bg-stone-200"
+                      canAfford ? "bg-[#AF2219] active:bg-[#8F1E2C]" : isDark ? "bg-stone-800" : "bg-stone-200"
                     }`}
                   >
                     <MaterialIcons
                       name="monetization-on"
                       size={14}
-                      color={canAfford ? "#FFFFFF" : "#8B8988"}
+                      color={canAfford ? "#FFFFFF" : isDark ? "#707579" : "#8B8988"}
                     />
                     <Text
                       className={`text-xs font-black ${
-                        canAfford ? "text-white" : "text-stone-500"
+                        canAfford ? "text-white" : isDark ? "text-stone-500" : "text-stone-500"
                       }`}
                     >
                       {item.price}
@@ -190,10 +192,10 @@ export default function ShopScreen() {
         </View>
 
         {/* Battle Arena CTA banner for gold farming */}
-        <View className="bg-[#AF221908] border border-[#AF221920] rounded-2xl p-4 flex-row items-center justify-between shadow-2xs mb-5">
+        <View className={`border rounded-2xl p-4 flex-row items-center justify-between shadow-2xs mb-5 ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-[#AF221908] border-[#AF221920]"}`}>
           <View className="flex-1 pr-3">
-            <Text className="text-xs font-black text-stone-900">Need More Gold?</Text>
-            <Text className="text-[11px] text-stone-500 font-medium mt-0.5">
+            <Text className={`text-xs font-black ${isDark ? "text-white" : "text-stone-900"}`}>Need More Gold?</Text>
+            <Text className={`text-[11px] font-medium mt-0.5 ${isDark ? "text-stone-400" : "text-stone-500"}`}>
               Defeat daily mobs and log expenses in the Battle Arena to earn bounties!
             </Text>
           </View>

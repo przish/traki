@@ -10,6 +10,7 @@ import {
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Haptics from "expo-haptics";
 import { useTraki } from "@/src/context/TrakiContext";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { PartnerService } from "@/src/services/partnerService";
 import { isValidPartnerCode } from "@/src/constants";
 
@@ -177,13 +178,17 @@ export default function PartnerCard({
     setTimeout(() => setFeedbackMsg(null), 3000);
   };
 
+  const isDark = useColorScheme() === "dark";
+
   // ==========================================
   // 1. BOUND PARTNER STATE (Already Linked)
   // ==========================================
   if (profile?.partner_name) {
     return (
       <View
-        className={`bg-white rounded-2xl p-4 border border-stone-200 shadow-2xs ${className}`}
+        className={`rounded-2xl p-4 border shadow-2xs ${
+          isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"
+        } ${className}`}
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-3">
@@ -192,16 +197,16 @@ export default function PartnerCard({
             </View>
             <View>
               <View className="flex-row items-center gap-1.5">
-                <Text className="text-sm font-black text-stone-900">
+                <Text className={`text-sm font-black ${isDark ? "text-white" : "text-stone-900"}`}>
                   {profile.partner_name}
                 </Text>
-                <View className="bg-[#C9E7D2] px-1.5 py-0.5 rounded-full">
-                  <Text className="text-[10px] font-black text-[#1C5E2D]">
+                <View className={`px-1.5 py-0.5 rounded-full ${isDark ? "bg-[#173822]" : "bg-[#C9E7D2]"}`}>
+                  <Text className={`text-[10px] font-black ${isDark ? "text-[#78C98B]" : "text-[#1C5E2D]"}`}>
                     Active Duo
                   </Text>
                 </View>
               </View>
-              <Text className="text-xs text-stone-500 font-medium mt-0.5">
+              <Text className={`text-xs font-medium mt-0.5 ${isDark ? "text-stone-400" : "text-stone-500"}`}>
                 {profile.partner_streak ?? 0}-Day Shared Streak Sync
               </Text>
             </View>
@@ -212,6 +217,8 @@ export default function PartnerCard({
             className={`px-3 py-1.5 rounded-xl border ${
               poked
                 ? "bg-[#AF2219] border-[#AF2219]"
+                : isDark
+                ? "bg-[#AF221925] border-[#AF221950] active:bg-[#AF221935]"
                 : "bg-[#AF221915] border-[#AF221940] active:bg-[#AF221925]"
             }`}
           >
@@ -228,7 +235,7 @@ export default function PartnerCard({
         {showUnlinkOption && (
           <Pressable
             onPress={handleUnlink}
-            className="mt-3 pt-2.5 border-t border-stone-100 items-center"
+            className={`mt-3 pt-2.5 border-t items-center ${isDark ? "border-[#303336]" : "border-stone-100"}`}
           >
             <Text className="text-[11px] font-semibold text-stone-400">
               Unlink Partner
@@ -244,7 +251,9 @@ export default function PartnerCard({
   // ==========================================
   return (
     <View
-      className={`bg-white rounded-2xl p-4 border border-stone-200 shadow-2xs ${className}`}
+      className={`rounded-2xl p-4 border shadow-2xs ${
+        isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"
+      } ${className}`}
     >
       {/* Header Banner */}
       <View className="flex-row items-center gap-2.5 mb-3">
@@ -252,29 +261,29 @@ export default function PartnerCard({
           <MaterialIcons name="favorite-border" size={18} color="#AF2219" />
         </View>
         <View className="flex-1">
-          <Text className="text-xs font-black uppercase tracking-wider text-stone-900">
+          <Text className={`text-xs font-black uppercase tracking-wider ${isDark ? "text-white" : "text-stone-900"}`}>
             Duo Partnership Quest
           </Text>
-          <Text className="text-[11px] text-stone-500 font-medium">
+          <Text className={`text-[11px] font-medium ${isDark ? "text-stone-400" : "text-stone-500"}`}>
             Sync habits and double your battle damage together
           </Text>
         </View>
       </View>
 
       {/* Segmented Mode Selector: Invite vs Join */}
-      <View className="flex-row bg-[#FAF8F6] p-1 rounded-xl border border-stone-200 mb-3">
+      <View className={`flex-row p-1 rounded-xl border mb-3 ${isDark ? "bg-[#101112] border-[#303336]" : "bg-[#FAF8F6] border-stone-200"}`}>
         <Pressable
           onPress={() => {
             setActiveTab("invite");
             setFeedbackMsg(null);
           }}
           className={`flex-1 py-1.5 rounded-lg items-center justify-center ${
-            activeTab === "invite" ? "bg-white shadow-2xs" : ""
+            activeTab === "invite" ? (isDark ? "bg-[#25282B] shadow-2xs" : "bg-white shadow-2xs") : ""
           }`}
         >
           <Text
             className={`text-xs font-bold ${
-              activeTab === "invite" ? "text-[#AF2219]" : "text-stone-500"
+              activeTab === "invite" ? "text-[#AF2219]" : isDark ? "text-stone-400" : "text-stone-500"
             }`}
           >
             Invite Partner
@@ -287,12 +296,12 @@ export default function PartnerCard({
             setFeedbackMsg(null);
           }}
           className={`flex-1 py-1.5 rounded-lg items-center justify-center ${
-            activeTab === "join" ? "bg-white shadow-2xs" : ""
+            activeTab === "join" ? (isDark ? "bg-[#25282B] shadow-2xs" : "bg-white shadow-2xs") : ""
           }`}
         >
           <Text
             className={`text-xs font-bold ${
-              activeTab === "join" ? "text-[#AF2219]" : "text-stone-500"
+              activeTab === "join" ? "text-[#AF2219]" : isDark ? "text-stone-400" : "text-stone-500"
             }`}
           >
             Join Partnership
@@ -305,13 +314,15 @@ export default function PartnerCard({
         <View
           className={`p-2.5 rounded-xl mb-3 border ${
             feedbackMsg.type === "success"
-              ? "bg-[#C9E7D2] border-[#3C9B55]/40"
+              ? isDark ? "bg-[#173822] border-[#3C9B55]/50" : "bg-[#C9E7D2] border-[#3C9B55]/40"
               : "bg-[#AF221915] border-[#AF221940]"
           }`}
         >
           <Text
             className={`text-xs font-bold ${
-              feedbackMsg.type === "success" ? "text-[#1C5E2D]" : "text-[#AF2219]"
+              feedbackMsg.type === "success"
+                ? isDark ? "text-[#78C98B]" : "text-[#1C5E2D]"
+                : "text-[#AF2219]"
             }`}
           >
             {feedbackMsg.text}
@@ -324,7 +335,7 @@ export default function PartnerCard({
         <View className="items-center">
           {partnerCode ? (
             <View className="w-full items-center">
-              <Text className="text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-2">
+              <Text className={`text-[11px] font-bold uppercase tracking-wider mb-2 ${isDark ? "text-stone-400" : "text-stone-500"}`}>
                 Your 4-Digit Partner Code
               </Text>
 
@@ -333,7 +344,9 @@ export default function PartnerCard({
                 {partnerCode.split("").map((digit, idx) => (
                   <View
                     key={idx}
-                    className="w-12 h-14 rounded-2xl bg-[#AF22190A] border-2 border-[#AF221940] items-center justify-center shadow-2xs"
+                    className={`w-12 h-14 rounded-2xl border-2 items-center justify-center shadow-2xs ${
+                      isDark ? "bg-[#AF221915] border-[#AF221960]" : "bg-[#AF22190A] border-[#AF221940]"
+                    }`}
                   >
                     <Text className="text-2xl font-black text-[#AF2219] tabular-nums">
                       {digit}
@@ -342,7 +355,7 @@ export default function PartnerCard({
                 ))}
               </View>
 
-              <Text className="text-[11px] text-stone-500 font-medium mb-3">
+              <Text className={`text-[11px] font-medium mb-3 ${isDark ? "text-stone-400" : "text-stone-500"}`}>
                 Expires in {timeRemaining || "15:00"}
               </Text>
 
@@ -360,16 +373,18 @@ export default function PartnerCard({
 
                 <Pressable
                   onPress={handleCopyCode}
-                  className="px-4 h-[42px] rounded-xl border border-stone-200 bg-[#FAF8F6] flex-row items-center justify-center gap-1 active:bg-stone-100"
+                  className={`px-4 h-[42px] rounded-xl border flex-row items-center justify-center gap-1 ${
+                    isDark ? "bg-[#25282B] border-[#303336] active:bg-[#303336]" : "border-stone-200 bg-[#FAF8F6] active:bg-stone-100"
+                  }`}
                 >
                   <MaterialIcons
                     name={copied ? "check" : "content-copy"}
                     size={16}
-                    color={copied ? "#3C9B55" : "#57534E"}
+                    color={copied ? "#3C9B55" : isDark ? "#AAA7A5" : "#57534E"}
                   />
                   <Text
                     className={`font-bold text-xs ${
-                      copied ? "text-[#3C9B55]" : "text-stone-700"
+                      copied ? "text-[#3C9B55]" : isDark ? "text-stone-300" : "text-stone-700"
                     }`}
                   >
                     {copied ? "Copied" : "Copy"}
@@ -385,7 +400,7 @@ export default function PartnerCard({
             </View>
           ) : (
             <View className="w-full py-1">
-              <Text className="text-xs text-stone-600 text-center leading-relaxed mb-3">
+              <Text className={`text-xs text-center leading-relaxed mb-3 ${isDark ? "text-stone-300" : "text-stone-600"}`}>
                 Generate a unique 4-digit code to invite your partner. They will
                 enter it on their phone to activate Duo Streaks.
               </Text>
@@ -414,7 +429,7 @@ export default function PartnerCard({
       {/* TAB 2: JOIN PARTNERSHIP (Enter Unique 4-Digit Code) */}
       {activeTab === "join" && (
         <View className="w-full">
-          <Text className="text-xs text-stone-600 text-center mb-3">
+          <Text className={`text-xs text-center mb-3 ${isDark ? "text-stone-300" : "text-stone-600"}`}>
             Ask your partner for their 4-digit code and enter it below:
           </Text>
 
@@ -431,13 +446,13 @@ export default function PartnerCard({
                   key={index}
                   className={`w-13 h-14 rounded-2xl items-center justify-center border-2 ${
                     char
-                      ? "border-[#AF2219] bg-[#AF22190A]"
+                      ? "border-[#AF2219] bg-[#AF221915]"
                       : isFocused
-                      ? "border-stone-800 bg-white"
-                      : "border-stone-200 bg-[#FAF8F6]"
+                      ? isDark ? "border-stone-400 bg-[#25282B]" : "border-stone-800 bg-white"
+                      : isDark ? "border-[#303336] bg-[#101112]" : "border-stone-200 bg-[#FAF8F6]"
                   }`}
                 >
-                  <Text className="text-2xl font-black text-stone-900 tabular-nums">
+                  <Text className={`text-2xl font-black tabular-nums ${isDark ? "text-white" : "text-stone-900"}`}>
                     {char}
                   </Text>
                 </View>
@@ -472,7 +487,7 @@ export default function PartnerCard({
             className={`h-[44px] w-full rounded-xl items-center justify-center mt-3 shadow-xs ${
               isJoinCodeValid && !isJoining
                 ? "bg-[#AF2219] active:bg-[#8F1E2C]"
-                : "bg-stone-200"
+                : isDark ? "bg-[#25282B]" : "bg-stone-200"
             }`}
           >
             {isJoining ? (
@@ -482,11 +497,11 @@ export default function PartnerCard({
                 <MaterialIcons
                   name="link"
                   size={18}
-                  color={isJoinCodeValid ? "#FFFFFF" : "#8B8988"}
+                  color={isJoinCodeValid ? "#FFFFFF" : isDark ? "#78716C" : "#8B8988"}
                 />
                 <Text
                   className={`font-bold text-sm ${
-                    isJoinCodeValid ? "text-white" : "text-stone-400"
+                    isJoinCodeValid ? "text-white" : isDark ? "text-stone-500" : "text-stone-400"
                   }`}
                 >
                   Join Partnership

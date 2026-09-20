@@ -1,6 +1,7 @@
 import { View, type ViewProps } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { cn } from "@/lib/utils";
 
 export interface ScreenContainerProps extends ViewProps {
@@ -28,15 +29,6 @@ export interface ScreenContainerProps extends ViewProps {
  *
  * The outer View extends to full screen (including status bar area) with the background color,
  * while the inner SafeAreaView ensures content is within safe bounds.
- *
- * Usage:
- * ```tsx
- * <ScreenContainer className="p-4">
- *   <Text className="text-2xl font-bold text-foreground">
- *     Welcome
- *   </Text>
- * </ScreenContainer>
- * ```
  */
 export function ScreenContainer({
   children,
@@ -47,11 +39,13 @@ export function ScreenContainer({
   style,
   ...props
 }: ScreenContainerProps) {
+  const isDark = useColorScheme() === "dark";
+
   return (
     <View
       className={cn(
         "flex-1",
-        "bg-background",
+        isDark ? "bg-[#101112]" : "bg-[#FAF8F6]",
         containerClassName
       )}
       {...props}

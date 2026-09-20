@@ -7,6 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useTraki } from "@/src/context/TrakiContext";
 import { formatCents } from "@/src/services/economyService";
 import { isValidNonEmptyText } from "@/src/constants";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 const WALLET_COLORS = ["#3C9B55", "#2B6CB0", "#D92C3B", "#F1B64A", "#AF2219", "#8B5CF6"];
 const WALLET_TYPES: { label: string; value: "cash" | "bank" | "credit" | "savings" }[] = [
@@ -24,6 +25,7 @@ const DEFAULT_CATEGORIES = [
 ];
 
 export default function TrackerScreen() {
+  const isDark = useColorScheme() === "dark";
   const { wallets, transactions, categories, addWallet, addCategory } = useTraki();
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
   const [showAddWallet, setShowAddWallet] = useState(false);
@@ -69,7 +71,7 @@ export default function TrackerScreen() {
             <Text className="text-[10px] font-black uppercase tracking-widest text-[#AF2219]">
               Total Net Worth
             </Text>
-            <Text className="text-2xl font-black text-stone-900 tabular-nums tracking-tight">
+            <Text className={`text-2xl font-black tabular-nums tracking-tight ${isDark ? "text-white" : "text-stone-900"}`}>
               {wallets.length > 0 ? formatCents(netWorthCents) : "PHP 0.00"}
             </Text>
           </View>
@@ -85,7 +87,7 @@ export default function TrackerScreen() {
 
         {/* Wallets Section */}
         <View className="flex-row items-center justify-between mb-2.5">
-          <Text className="text-xs font-black uppercase tracking-wider text-stone-600">
+          <Text className={`text-xs font-black uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
             Accounts & Wallets
           </Text>
           <View className="flex-row items-center gap-2">
@@ -106,14 +108,14 @@ export default function TrackerScreen() {
 
         {/* Empty Wallet State */}
         {wallets.length === 0 && !showAddWallet ? (
-          <View className="bg-white rounded-2xl p-6 border border-stone-200 mb-5 items-center shadow-2xs">
+          <View className={`rounded-2xl p-6 border mb-5 items-center shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"}`}>
             <View className="h-16 w-16 rounded-2xl bg-[#AF221915] border-2 border-[#AF221930] items-center justify-center mb-3">
               <MaterialIcons name="account-balance-wallet" size={32} color="#AF2219" />
             </View>
-            <Text className="text-base font-black text-stone-900 text-center mb-1">
+            <Text className={`text-base font-black text-center mb-1 ${isDark ? "text-white" : "text-stone-900"}`}>
               Create Your First Wallet
             </Text>
-            <Text className="text-xs text-stone-500 font-medium text-center leading-relaxed mb-4">
+            <Text className={`text-xs font-medium text-center leading-relaxed mb-4 ${isDark ? "text-stone-400" : "text-stone-500"}`}>
               Add a wallet to start tracking your spending{"\n"}and dealing damage to bosses!
             </Text>
             <Pressable
@@ -132,19 +134,19 @@ export default function TrackerScreen() {
                   key={w.id}
                   onPress={() => setSelectedWalletId(isSelected ? null : w.id)}
                   className={`p-3.5 rounded-2xl flex-1 min-w-[140px] border ${isSelected
-                    ? "bg-white border-[#AF2219] shadow-xs"
-                    : "bg-white border-stone-200"
+                    ? isDark ? "bg-[#25282B] border-[#AF2219] shadow-xs" : "bg-white border-[#AF2219] shadow-xs"
+                    : isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"
                     }`}
                 >
                   <View className="flex-row items-center justify-between mb-2">
-                    <Text className="text-xs font-bold text-stone-600">{w.name}</Text>
+                    <Text className={`text-xs font-bold ${isDark ? "text-stone-400" : "text-stone-600"}`}>{w.name}</Text>
                     <View
                       style={{ backgroundColor: w.color }}
                       className="w-2.5 h-2.5 rounded-full"
                     />
                   </View>
                   <Text
-                    className={`text-base font-black tabular-nums ${w.balance < 0 ? "text-[#AF2219]" : "text-stone-900"
+                    className={`text-base font-black tabular-nums ${w.balance < 0 ? "text-[#AF2219]" : (isDark ? "text-white" : "text-stone-900")
                       }`}
                   >
                     {formatCents(w.balance)}
@@ -162,18 +164,18 @@ export default function TrackerScreen() {
 
         {/* Add Wallet Form */}
         {showAddWallet && (
-          <View className="bg-white rounded-2xl p-4 border border-[#AF221930] mb-5 shadow-2xs">
-            <Text className="text-xs font-black uppercase tracking-wider text-stone-600 mb-3">
+          <View className={`rounded-2xl p-4 border mb-5 shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#AF221950]" : "bg-white border-[#AF221930]"}`}>
+            <Text className={`text-xs font-black uppercase tracking-wider mb-3 ${isDark ? "text-stone-300" : "text-stone-600"}`}>
               New Wallet
             </Text>
             <TextInput
               value={newWalletName}
               onChangeText={setNewWalletName}
               placeholder="Wallet name (e.g. Daily Cash)"
-              placeholderTextColor="#8B8988"
-              className="h-[44px] px-3 rounded-xl border border-stone-200 bg-[#FAF8F6] text-sm font-medium text-stone-900 mb-3"
+              placeholderTextColor={isDark ? "#707579" : "#8B8988"}
+              className={`h-[44px] px-3 rounded-xl border text-sm font-medium mb-3 ${isDark ? "border-[#303336] bg-[#101112] text-white" : "border-stone-200 bg-[#FAF8F6] text-stone-900"}`}
             />
-            <Text className="text-[11px] font-bold text-stone-500 mb-2">Type</Text>
+            <Text className={`text-[11px] font-bold mb-2 ${isDark ? "text-stone-400" : "text-stone-500"}`}>Type</Text>
             <View className="flex-row gap-2 mb-3">
               {WALLET_TYPES.map((wt) => (
                 <Pressable
@@ -181,23 +183,23 @@ export default function TrackerScreen() {
                   onPress={() => setNewWalletType(wt.value)}
                   className={`px-3 py-1.5 rounded-lg border ${newWalletType === wt.value
                     ? "bg-[#AF2219] border-[#AF2219]"
-                    : "bg-white border-stone-200"
+                    : isDark ? "bg-[#25282B] border-[#303336]" : "bg-white border-stone-200"
                     }`}
                 >
-                  <Text className={`text-xs font-bold ${newWalletType === wt.value ? "text-white" : "text-stone-600"}`}>
+                  <Text className={`text-xs font-bold ${newWalletType === wt.value ? "text-white" : (isDark ? "text-stone-300" : "text-stone-600")}`}>
                     {wt.label}
                   </Text>
                 </Pressable>
               ))}
             </View>
-            <Text className="text-[11px] font-bold text-stone-500 mb-2">Color</Text>
+            <Text className={`text-[11px] font-bold mb-2 ${isDark ? "text-stone-400" : "text-stone-500"}`}>Color</Text>
             <View className="flex-row gap-2.5 mb-4">
               {WALLET_COLORS.map((c) => (
                 <Pressable
                   key={c}
                   onPress={() => setNewWalletColor(c)}
                   style={{ backgroundColor: c }}
-                  className={`w-8 h-8 rounded-full ${newWalletColor === c ? "border-2 border-stone-900" : "border border-stone-200"}`}
+                  className={`w-8 h-8 rounded-full ${newWalletColor === c ? (isDark ? "border-2 border-white" : "border-2 border-stone-900") : "border border-stone-300"}`}
                 />
               ))}
             </View>
@@ -206,10 +208,10 @@ export default function TrackerScreen() {
               disabled={!isWalletValid}
               className={`h-[44px] rounded-xl items-center justify-center ${isWalletValid
                 ? "bg-[#AF2219] active:bg-[#8F1E2C]"
-                : "bg-stone-200"
+                : isDark ? "bg-stone-800" : "bg-stone-200"
                 }`}
             >
-              <Text className={`font-bold text-sm ${isWalletValid ? "text-white" : "text-stone-400"}`}>
+              <Text className={`font-bold text-sm ${isWalletValid ? "text-white" : (isDark ? "text-stone-500" : "text-stone-400")}`}>
                 Create Wallet
               </Text>
             </Pressable>
@@ -218,20 +220,20 @@ export default function TrackerScreen() {
 
         {/* Category Budget Status */}
         <View className="flex-row items-center justify-between mb-2.5">
-          <Text className="text-xs font-black uppercase tracking-wider text-stone-600">
+          <Text className={`text-xs font-black uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
             Monthly Budgets
           </Text>
         </View>
 
         {categories.length === 0 ? (
-          <View className="bg-white rounded-2xl p-6 border border-stone-200 mb-5 items-center shadow-2xs">
+          <View className={`rounded-2xl p-6 border mb-5 items-center shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"}`}>
             <View className="h-14 w-14 rounded-2xl bg-[#AF221915] border border-[#AF221930] items-center justify-center mb-3">
               <MaterialIcons name="category" size={28} color="#AF2219" />
             </View>
-            <Text className="text-sm font-black text-stone-900 text-center mb-1">
+            <Text className={`text-sm font-black text-center mb-1 ${isDark ? "text-white" : "text-stone-900"}`}>
               Set Up Budget Categories
             </Text>
-            <Text className="text-xs text-stone-500 font-medium text-center leading-relaxed mb-4">
+            <Text className={`text-xs font-medium text-center leading-relaxed mb-4 ${isDark ? "text-stone-400" : "text-stone-500"}`}>
               Categories help you track spending habits{"\n"}and fight bosses more effectively.
             </Text>
             <Pressable
@@ -242,7 +244,7 @@ export default function TrackerScreen() {
             </Pressable>
           </View>
         ) : (
-          <View className="bg-white rounded-2xl p-4 border border-stone-200 mb-5 shadow-2xs">
+          <View className={`rounded-2xl p-4 border mb-5 shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"}`}>
             {categories.map((c) => {
               const spentCents = transactions
                 .filter((t) => t.category_id === c.id)
@@ -255,13 +257,13 @@ export default function TrackerScreen() {
                   <View className="flex-row justify-between items-center mb-1">
                     <View className="flex-row items-center gap-2">
                       <MaterialIcons name={c.icon as any} size={16} color="#AF2219" />
-                      <Text className="text-xs font-bold text-stone-800">{c.name}</Text>
+                      <Text className={`text-xs font-bold ${isDark ? "text-stone-200" : "text-stone-800"}`}>{c.name}</Text>
                     </View>
-                    <Text className="text-xs font-black text-stone-800 tabular-nums">
+                    <Text className={`text-xs font-black tabular-nums ${isDark ? "text-stone-200" : "text-stone-800"}`}>
                       {formatCents(spentCents)} / {formatCents(cap)}
                     </Text>
                   </View>
-                  <View className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
+                  <View className={`h-2 w-full rounded-full overflow-hidden ${isDark ? "bg-stone-800" : "bg-stone-100"}`}>
                     <View
                       style={{
                         width: `${progress}%`,
@@ -279,7 +281,7 @@ export default function TrackerScreen() {
 
         {/* Transaction History */}
         <View className="flex-row items-center justify-between mb-2.5">
-          <Text className="text-xs font-black uppercase tracking-wider text-stone-600">
+          <Text className={`text-xs font-black uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
             Recent Ledger Entries
           </Text>
           <Text className="text-xs font-bold text-stone-400">
@@ -287,7 +289,7 @@ export default function TrackerScreen() {
           </Text>
         </View>
 
-        <View className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-2xs">
+        <View className={`rounded-2xl border overflow-hidden shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"}`}>
           {filteredTransactions.length === 0 ? (
             <View className="p-8 items-center justify-center gap-2">
               <Text className="text-xs font-bold text-stone-400 text-center">
@@ -335,7 +337,7 @@ export default function TrackerScreen() {
               return (
                 <View
                   key={tx.id}
-                  className={`p-3.5 flex-row items-center justify-between ${!isLast ? "border-b border-stone-100" : ""
+                  className={`p-3.5 flex-row items-center justify-between ${!isLast ? (isDark ? "border-b border-[#303336]" : "border-b border-stone-100") : ""
                     }`}
                 >
                   <View className="flex-row items-center gap-3">
@@ -347,7 +349,7 @@ export default function TrackerScreen() {
                       />
                     </View>
                     <View>
-                      <Text className="text-xs font-bold text-stone-800">{tx.note || cat?.name || "Expense"}</Text>
+                      <Text className={`text-xs font-bold ${isDark ? "text-stone-200" : "text-stone-800"}`}>{tx.note || cat?.name || "Expense"}</Text>
                       <Text className="text-[10px] text-stone-400 font-medium">{dateStr}</Text>
                     </View>
                   </View>

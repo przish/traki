@@ -64,7 +64,7 @@ function AppShell() {
             }}
           />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style={colors.background === "#101112" ? "light" : "dark"} />
       </View>
     </View>
   );
