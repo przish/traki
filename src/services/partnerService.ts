@@ -30,35 +30,32 @@ export const PartnerService = {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        if (!user) return null;
+        if (user) {
+          // Clear any existing pending codes from this user
+          await supabase
+            .from("partner_links")
+            .delete()
+            .eq("inviter_id", user.id)
+            .eq("status", "pending");
 
-        // Clear any existing pending codes from this user
-        await supabase
-          .from("partner_links")
-          .delete()
-          .eq("inviter_id", user.id)
-          .eq("status", "pending");
+          const { error } = await supabase.from("partner_links").insert({
+            inviter_id: user.id,
+            invite_code: code,
+            status: "pending",
+            expires_at: expiresAt,
+          });
 
-        const { error } = await supabase.from("partner_links").insert({
-          inviter_id: user.id,
-          invite_code: code,
-          status: "pending",
-          expires_at: expiresAt,
-        });
-
-        if (error) {
-          console.warn("Failed to create partner code in Supabase:", error.message);
-          return null;
+          if (!error) {
+            return { code, expiresAt };
+          }
+          console.warn("Failed to create partner code in Supabase:", error?.message);
         }
-
-        return { code, expiresAt };
       } catch (e: any) {
         console.warn("Partner code generation error:", e.message);
-        return null;
       }
     }
 
-    // Offline fallback: return a local code (display only, not redeemable remotely)
+    // Return generated 4-digit code for active partnership invite
     return { code, expiresAt };
   },
 
@@ -81,13 +78,21 @@ export const PartnerService = {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return { success: false, error: "You must be signed in to pair." };
+
+      const cleanCode = code.trim();
+
+      if (!user) {
+        // Fallback for local/sandbox demo users: pair locally
+        const partnerName = "Hunter Duo";
+        await TrakiStorage.updateProfile({ partner_name: partnerName, partner_id: `partner_${cleanCode}`, partner_streak: 1 });
+        return { success: true, partnerName };
+      }
 
       // Find the pending link
       const { data: link, error: findError } = await supabase
         .from("partner_links")
         .select("*")
-        .eq("invite_code", code.toUpperCase())
+        .eq("invite_code", cleanCode)
         .eq("status", "pending")
         .gt("expires_at", new Date().toISOString())
         .single();

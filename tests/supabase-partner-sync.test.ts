@@ -86,16 +86,16 @@ describe("Partner Service Suite", () => {
     await TrakiStorage.clearAll();
   });
 
-  it("generates a 6-character partner invite code in local/offline fallback", async () => {
+  it("generates a 4-digit partner invite code in local/offline fallback", async () => {
     const result = await PartnerService.generatePartnerCode();
     expect(result).not.toBeNull();
     expect(result?.code).toBeDefined();
-    expect(result?.code.length).toBe(6);
+    expect(result?.code.length).toBe(4);
     expect(result?.expiresAt).toBeDefined();
   });
 
   it("reports cloud connection requirement when redeeming in offline mode", async () => {
-    const result = await PartnerService.redeemPartnerCode("XYZ999");
+    const result = await PartnerService.redeemPartnerCode("4829");
     expect(result.success).toBe(false);
     expect(result.error).toContain("Cloud connection required");
   });
