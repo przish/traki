@@ -24,23 +24,26 @@ export default function Index() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom", "left", "right"]}>
-      <View className="flex-1 justify-between items-center px-6 py-4 max-w-[420px] w-full self-center">
-        {/* Spacer to keep center balance */}
-        <View className="h-2" />
-
-        {/* Perfectly Centered Hero Logo */}
-        <View className="items-center justify-center my-auto">
+      <View className="flex-1 justify-between items-center px-6 pt-6 pb-4 max-w-[420px] w-full self-center">
+        {/* Hero Branding - Naturally balanced in upper-middle viewport */}
+        <View className="items-center justify-center flex-1 my-auto">
           <Pressable
             className="items-center justify-center active:scale-95 transition-transform"
             onPress={handleStart}
           >
             <Image
               source={require("../../assets/images/logos/traki-logo.png")}
-              style={{ width: 180, height: 180 }}
-              className="w-[180px] h-[180px]"
+              style={{ width: 170, height: 170 }}
+              className="w-[170px] h-[170px]"
               resizeMode="contain"
             />
           </Pressable>
+          <Text className="text-[#AF2219] text-2xl font-black tracking-tight mt-3">
+            Traki
+          </Text>
+          <Text className="text-stone-500 text-xs font-semibold text-center mt-1">
+            Turn Personal Budgeting Into an Epic Duo Quest
+          </Text>
         </View>
 
         {/* Bottom Actions with Crisp Alignment */}

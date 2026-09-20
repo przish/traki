@@ -48,92 +48,95 @@ export default function SignUp() {
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: "center",
+            justifyContent: "space-between",
             paddingHorizontal: 24,
-            paddingVertical: 12,
+            paddingTop: 4,
+            paddingBottom: 16,
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          <View className="w-full max-w-[420px] self-center items-center">
-            <View className="w-full flex-row items-center mb-1">
+          <View className="w-full max-w-[420px] self-center flex-1 justify-between">
+            {/* Top Area: Navigation, Branding, Header, Form */}
+            <View className="w-full">
               <BackButton />
+
+              <View className="items-center my-1">
+                <Logo size={74} className="my-1" />
+                <Text className="text-[#AF2219] text-2xl font-black tracking-tight text-center">
+                  Let&apos;s start with your email
+                </Text>
+                <Text className="text-stone-500 text-xs text-center font-medium mt-0.5">
+                  Your journey to financial mastery starts here
+                </Text>
+              </View>
+
+              {activeError ? (
+                <View className="w-full bg-red-50 border border-red-200 rounded-xl p-3 my-2 flex-row items-center justify-between">
+                  <Text className="text-red-700 text-xs font-semibold flex-1 mr-2">
+                    {activeError}
+                  </Text>
+                  <Pressable
+                    onPress={() => {
+                      setLocalError(null);
+                      clearError();
+                    }}
+                  >
+                    <MaterialCommunityIcons name="close-circle" size={18} color="#AF2219" />
+                  </Pressable>
+                </View>
+              ) : null}
+
+              <View className="w-full gap-3 mt-2">
+                <View className="gap-1.5">
+                  <Text className="text-stone-700 text-xs font-bold uppercase tracking-wider">
+                    Email Address
+                  </Text>
+                  <TextField
+                    placeholder="e.g. hero@traki.app"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <Continue
+                  title="Continue to Passcode"
+                  disabled={!isEmailValid}
+                  onPress={handleContinue}
+                />
+
+                <ORdivider />
+
+                <LoginMethods
+                  onSuccess={() => router.replace("/(tabs)")}
+                  onError={(err) => setLocalError(err)}
+                />
+              </View>
             </View>
 
-            <Logo size={90} className="my-1" />
-
-            <View className="my-1.5 items-center">
-              <Text className="text-[#AF2219] text-2xl font-black tracking-tight text-center">
-                Let&apos;s start with your email
-              </Text>
-              <Text className="text-stone-500 text-xs text-center font-medium mt-0.5">
-                Your journey to financial mastery starts here
-              </Text>
-            </View>
-
-        {activeError ? (
-          <View className="w-full bg-red-50 border border-red-200 rounded-xl p-3 my-2 flex-row items-center justify-between">
-            <Text className="text-red-700 text-xs font-semibold flex-1 mr-2">
-              {activeError}
-            </Text>
-            <Pressable
-              onPress={() => {
-                setLocalError(null);
-                clearError();
-              }}
-            >
-              <MaterialCommunityIcons name="close-circle" size={18} color="#AF2219" />
-            </Pressable>
-          </View>
-        ) : null}
-
-        <View className="w-full gap-3 mt-2">
-          <View className="gap-1.5">
-            <Text className="text-stone-700 text-xs font-bold uppercase tracking-wider">
-              Email Address
-            </Text>
-            <TextField
-              placeholder="e.g. hero@traki.app"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-
-          <Continue
-            title="Continue to Passcode"
-            disabled={!isEmailValid}
-            onPress={handleContinue}
-          />
-
-          <ORdivider />
-
-          <LoginMethods
-            onSuccess={() => router.replace("/(tabs)")}
-            onError={(err) => setLocalError(err)}
-          />
-        </View>
-
-        <View className="mt-5 mb-2">
-          <Pressable
-            onPress={() => {
-              router.push("/login");
-            }}
-          >
-            {({ pressed }) => (
-              <Text
-                className={`text-[#AF2219] text-sm font-semibold ${
-                  pressed ? "underline opacity-80" : ""
-                }`}
+            {/* Bottom Footer Link */}
+            <View className="items-center pt-4 pb-2">
+              <Pressable
+                onPress={() => {
+                  router.push("/login");
+                }}
               >
-                Already have an account? <Text className="font-bold underline">Log In</Text>
-              </Text>
-            )}
-          </Pressable>
-        </View>
-        </View>
-      </ScrollView>
+                {({ pressed }) => (
+                  <Text
+                    className={`text-[#AF2219] text-sm font-semibold ${
+                      pressed ? "underline opacity-80" : ""
+                    }`}
+                  >
+                    Already have an account? <Text className="font-bold underline">Log In</Text>
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </ScrollView>
     </KeyboardAvoidingView>
   </SafeAreaView>
   );
