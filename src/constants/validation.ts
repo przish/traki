@@ -7,8 +7,8 @@
 export const VALIDATION_CONFIG = {
   EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   MIN_PASSWORD_LENGTH: 6,
-  PARTNER_CODE_LENGTH: 6,
-  PARTNER_CODE_REGEX: /^[A-Z0-9]{6}$/,
+  PARTNER_CODE_LENGTH: 4,
+  PARTNER_CODE_REGEX: /^[0-9]{4}$/,
   MIN_TEXT_LENGTH: 1,
   MIN_AMOUNT_CENTS: 100, // ₱1.00 minimum
 } as const;
@@ -38,11 +38,11 @@ export function doPasswordsMatch(password: string, confirmPassword: string): boo
 }
 
 /**
- * Validates partner redemption code (6 alphanumeric characters)
+ * Validates partner redemption code (4 numeric digits)
  */
 export function isValidPartnerCode(code: string): boolean {
   if (!code || typeof code !== "string") return false;
-  return VALIDATION_CONFIG.PARTNER_CODE_REGEX.test(code.trim().toUpperCase());
+  return VALIDATION_CONFIG.PARTNER_CODE_REGEX.test(code.trim());
 }
 
 /**

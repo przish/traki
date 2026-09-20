@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { ScrollView, Text, View, Pressable, Switch, Image, TextInput } from "react-native";
+import React, { useState } from "react";
+import { ScrollView, Text, View, Pressable, Switch, Image } from "react-native";
 import { router } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Haptics from "expo-haptics";
@@ -7,8 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useTraki } from "@/src/context/TrakiContext";
 import { useThemeContext } from "@/lib/theme-provider";
 import { useAuth } from "@/src/context/AuthContext";
-import { PartnerService } from "@/src/services/partnerService";
-import { isValidPartnerCode } from "@/src/constants";
+import PartnerCard from "@/components/PartnerCard";
 
 export default function ProfileScreen() {
   const { profile, syncState, syncNow } = useTraki();
@@ -16,16 +15,7 @@ export default function ProfileScreen() {
   const { colorScheme, setColorScheme } = useThemeContext();
   const [showMechanics, setShowMechanics] = useState(false);
   const [showShortcutGuide, setShowShortcutGuide] = useState(false);
-
-  // Partner pairing state
   const [showPartnerSection, setShowPartnerSection] = useState(false);
-  const [partnerCode, setPartnerCode] = useState<string | null>(null);
-  const [codeExpiresAt, setCodeExpiresAt] = useState<string | null>(null);
-  const [redeemCode, setRedeemCode] = useState("");
-  const [partnerMsg, setPartnerMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isRedeeming, setIsRedeeming] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState("");
 
   const expToNextLevel = (profile?.level ?? 1) * 200;
   const expProgressPercent = Math.min(
@@ -63,63 +53,6 @@ export default function ProfileScreen() {
       default:
         return "Authenticated";
     }
-  };
-
-  // Code expiry countdown
-  useEffect(() => {
-    if (!codeExpiresAt) return;
-    const interval = setInterval(() => {
-      const diff = new Date(codeExpiresAt).getTime() - Date.now();
-      if (diff <= 0) {
-        setPartnerCode(null);
-        setCodeExpiresAt(null);
-        setTimeRemaining("");
-        clearInterval(interval);
-        return;
-      }
-      const mins = Math.floor(diff / 60000);
-      const secs = Math.floor((diff % 60000) / 1000);
-      setTimeRemaining(`${mins}:${secs.toString().padStart(2, "0")}`);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [codeExpiresAt]);
-
-  const handleGenerateCode = async () => {
-    setIsGenerating(true);
-    try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch { }
-    const result = await PartnerService.generatePartnerCode();
-    if (result) {
-      setPartnerCode(result.code);
-      setCodeExpiresAt(result.expiresAt);
-      setPartnerMsg(null);
-    } else {
-      setPartnerMsg({ type: "error", text: "Failed to generate code. Try again." });
-    }
-    setIsGenerating(false);
-  };
-
-  const handleRedeemCode = async () => {
-    if (!isValidPartnerCode(redeemCode) || isRedeeming) {
-      setPartnerMsg({ type: "error", text: "Enter a valid 6-character code." });
-      return;
-    }
-    setIsRedeeming(true);
-    try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch { }
-    const result = await PartnerService.redeemPartnerCode(redeemCode.trim());
-    if (result.success) {
-      setPartnerMsg({ type: "success", text: `Linked with ${result.partnerName}! 🎉` });
-      setRedeemCode("");
-    } else {
-      setPartnerMsg({ type: "error", text: result.error || "Failed to redeem code." });
-    }
-    setIsRedeeming(false);
-  };
-
-  const handleUnlinkPartner = async () => {
-    try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); } catch { }
-    await PartnerService.unlinkPartner();
-    setPartnerMsg({ type: "success", text: "Partner unlinked." });
-    setTimeout(() => setPartnerMsg(null), 3000);
   };
 
   const getSyncLabel = () => {
@@ -254,107 +187,7 @@ export default function ProfileScreen() {
         </Pressable>
 
         {showPartnerSection && (
-          <View className="bg-white rounded-2xl p-4 border border-stone-200 mb-5 shadow-2xs">
-            {partnerMsg && (
-              <View
-                className={`p-3 rounded-xl mb-3 border ${partnerMsg.type === "success"
-                  ? "bg-[#C9E7D2] border-[#3C9B55]/40"
-                  : "bg-[#AF221915] border-[#AF221940]"
-                  }`}
-              >
-                <Text className={`text-xs font-bold ${partnerMsg.type === "success" ? "text-[#1C5E2D]" : "text-[#AF2219]"}`}>
-                  {partnerMsg.text}
-                </Text>
-              </View>
-            )}
-
-            {profile?.partner_name ? (
-              <View>
-                <View className="flex-row items-center gap-3 mb-3">
-                  <View className="h-12 w-12 rounded-xl bg-[#AF221915] border border-[#AF221930] items-center justify-center">
-                    <MaterialIcons name="favorite" size={24} color="#AF2219" />
-                  </View>
-                  <View>
-                    <Text className="text-sm font-black text-stone-900">
-                      Linked with {profile.partner_name}
-                    </Text>
-                    <Text className="text-xs text-stone-500 font-medium">
-                      {profile.partner_streak ?? 0}-day shared streak
-                    </Text>
-                  </View>
-                </View>
-                <Pressable
-                  onPress={handleUnlinkPartner}
-                  className="h-[38px] rounded-xl border border-stone-200 items-center justify-center active:bg-stone-50"
-                >
-                  <Text className="text-xs font-bold text-stone-500">Unlink Partner</Text>
-                </Pressable>
-              </View>
-            ) : (
-              <View>
-                <Text className="text-xs font-bold text-stone-700 mb-3">
-                  Connect with your partner using a 6-digit code:
-                </Text>
-
-                {/* Generate Code */}
-                <View className="mb-4">
-                  <Text className="text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-2">
-                    Share Your Code
-                  </Text>
-                  {partnerCode ? (
-                    <View className="bg-[#AF221908] border border-[#AF221920] rounded-xl p-4 items-center">
-                      <Text className="text-3xl font-black text-[#AF2219] tracking-[8px] mb-1">
-                        {partnerCode}
-                      </Text>
-                      <Text className="text-[11px] text-stone-500 font-medium">
-                        Expires in {timeRemaining || "..."}
-                      </Text>
-                    </View>
-                  ) : (
-                    <Pressable
-                      onPress={handleGenerateCode}
-                      disabled={isGenerating}
-                      className="h-[44px] rounded-xl bg-[#AF2219] items-center justify-center active:bg-[#8F1E2C]"
-                    >
-                      <Text className="text-white font-bold text-sm">
-                        {isGenerating ? "Generating..." : "Generate Partner Code"}
-                      </Text>
-                    </Pressable>
-                  )}
-                </View>
-
-                {/* Redeem Code */}
-                <View>
-                  <Text className="text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-2">
-                    Enter Partner&apos;s Code
-                  </Text>
-                  <View className="flex-row gap-2">
-                    <TextInput
-                      value={redeemCode}
-                      onChangeText={(t) => setRedeemCode(t.toUpperCase())}
-                      placeholder="ABC123"
-                      placeholderTextColor="#8B8988"
-                      maxLength={6}
-                      autoCapitalize="characters"
-                      className="flex-1 h-[44px] px-3 rounded-xl border border-stone-200 bg-[#FAF8F6] text-center text-lg font-black text-stone-900 tracking-[4px]"
-                    />
-                    <Pressable
-                      onPress={handleRedeemCode}
-                      disabled={isRedeeming || !isValidPartnerCode(redeemCode)}
-                      className={`h-[44px] px-4 rounded-xl items-center justify-center ${isValidPartnerCode(redeemCode)
-                        ? "bg-[#AF2219] active:bg-[#8F1E2C]"
-                        : "bg-stone-200"
-                        }`}
-                    >
-                      <Text className={`text-sm font-bold ${isValidPartnerCode(redeemCode) ? "text-white" : "text-stone-400"}`}>
-                        {isRedeeming ? "..." : "Link"}
-                      </Text>
-                    </Pressable>
-                  </View>
-                </View>
-              </View>
-            )}
-          </View>
+          <PartnerCard showUnlinkOption={true} className="mb-5" />
         )}
 
         {/* Cloud Sync Status */}

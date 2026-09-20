@@ -45,16 +45,17 @@ describe("Validation Rules & Helper Suite", () => {
   });
 
   describe("isValidPartnerCode", () => {
-    it("accepts exactly 6 alphanumeric characters", () => {
-      expect(isValidPartnerCode("ABC123")).toBe(true);
-      expect(isValidPartnerCode("trk999")).toBe(true); // case-insensitive trimmed
-      expect(isValidPartnerCode("  ZZZ777  ")).toBe(true);
+    it("accepts exactly 4 numeric digits", () => {
+      expect(isValidPartnerCode("4829")).toBe(true);
+      expect(isValidPartnerCode("0000")).toBe(true);
+      expect(isValidPartnerCode("  7105  ")).toBe(true);
     });
 
     it("rejects invalid partner codes", () => {
-      expect(isValidPartnerCode("ABC12")).toBe(false); // too short
-      expect(isValidPartnerCode("ABC1234")).toBe(false); // too long
-      expect(isValidPartnerCode("AB-123")).toBe(false); // non-alphanumeric
+      expect(isValidPartnerCode("482")).toBe(false); // too short
+      expect(isValidPartnerCode("48291")).toBe(false); // too long
+      expect(isValidPartnerCode("ABCD")).toBe(false); // non-numeric
+      expect(isValidPartnerCode("48-9")).toBe(false); // symbols
       expect(isValidPartnerCode("")).toBe(false);
     });
   });
