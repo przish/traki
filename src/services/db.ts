@@ -8,8 +8,10 @@ import {
   SavingsGoal,
   AuthSession,
 } from "../types";
+import { STARTER_PLAYER_PROFILE, createDefaultBossEncounters } from "../constants";
 
 let dbInstance: any = null;
+const DATABASE_NAME = "traki.db";
 
 // In-memory fallback for web environment — starts EMPTY (no mock data)
 const memoryStore = {
@@ -17,69 +19,13 @@ const memoryStore = {
   wallets: [] as Wallet[],
   categories: [] as Category[],
   transactions: [] as Transaction[],
-  profile: {
-    id: "player_1",
-    level: 1,
-    exp: 0,
-    gold: 0,
-    trk_tokens: 0,
-    current_streak: 1,
-    highest_streak: 1,
-    streak_shields: 1,
-    last_logged_date: null,
-    partner_name: undefined,
-    partner_id: undefined,
-    partner_streak: 0,
-  } as PlayerProfile,
+  profile: { ...STARTER_PLAYER_PROFILE } as PlayerProfile,
   bosses: [] as BossEncounter[],
   goals: [] as SavingsGoal[],
 };
 
 // Default boss encounters (game mechanic, auto-seeded on first launch)
-const DEFAULT_BOSSES: BossEncounter[] = [
-  {
-    id: "boss_daily",
-    tier: "daily",
-    name: "Imp of Impulsive Buys",
-    title: "Daily Mob",
-    max_hp: 500,
-    current_hp: 500,
-    gold_reward: 120,
-    trk_reward: 0,
-    exp_reward: 50,
-    sprite_key: "goblin",
-    expires_at: new Date(Date.now() + 12 * 3600 * 1000).toISOString(),
-    is_defeated: 0,
-  },
-  {
-    id: "boss_weekly",
-    tier: "weekly",
-    name: "The Interest Behemoth",
-    title: "Weekly Miniboss",
-    max_hp: 2000,
-    current_hp: 2000,
-    gold_reward: 500,
-    trk_reward: 3,
-    exp_reward: 250,
-    sprite_key: "behemoth",
-    expires_at: new Date(Date.now() + 4 * 86400 * 1000).toISOString(),
-    is_defeated: 0,
-  },
-  {
-    id: "boss_monthly",
-    tier: "monthly",
-    name: "Titan of Inflation",
-    title: "Monthly Titan",
-    max_hp: 8000,
-    current_hp: 8000,
-    gold_reward: 2000,
-    trk_reward: 10,
-    exp_reward: 1000,
-    sprite_key: "titan",
-    expires_at: new Date(Date.now() + 18 * 86400 * 1000).toISOString(),
-    is_defeated: 0,
-  },
-];
+const DEFAULT_BOSSES: BossEncounter[] = createDefaultBossEncounters();
 
 export async function getDatabase() {
   if (Platform.OS === "web") {
@@ -89,7 +35,7 @@ export async function getDatabase() {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const SQLite = require("expo-sqlite");
-      dbInstance = await SQLite.openDatabaseAsync("traki.db");
+      dbInstance = await SQLite.openDatabaseAsync(DATABASE_NAME);
       await initializeDatabase(dbInstance);
     } catch (e) {
       console.warn("Failed to open SQLite database, falling back to memory store:", e);
@@ -502,20 +448,7 @@ export const TrakiStorage = {
     memoryStore.transactions = [];
     memoryStore.goals = [];
     memoryStore.bosses = [];
-    memoryStore.profile = {
-      id: "player_1",
-      level: 1,
-      exp: 0,
-      gold: 0,
-      trk_tokens: 0,
-      current_streak: 1,
-      highest_streak: 1,
-      streak_shields: 1,
-      last_logged_date: null,
-      partner_name: undefined,
-      partner_id: undefined,
-      partner_streak: 0,
-    };
+    memoryStore.profile = { ...STARTER_PLAYER_PROFILE };
     const db = await getDatabase();
     if (!db) return;
     await db.execAsync(`

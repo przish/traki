@@ -1,4 +1,5 @@
 import { PlayerProfile, SavingsGoal } from "../types";
+import { ECONOMY_CONFIG } from "../constants";
 
 export interface StreakEvaluationResult {
   currentStreak: number;
@@ -10,11 +11,11 @@ export interface StreakEvaluationResult {
 /**
  * Disciplined financial currency formatter in integer cents to eliminate IEEE 754 drift.
  */
-export function formatCents(cents: number, currency = "PHP"): string {
+export function formatCents(cents: number, currency = ECONOMY_CONFIG.DEFAULT_CURRENCY): string {
   const isNegative = cents < 0;
   const absCents = Math.abs(cents);
-  const units = Math.floor(absCents / 100);
-  const remainder = absCents % 100;
+  const units = Math.floor(absCents / ECONOMY_CONFIG.CENTS_PER_UNIT);
+  const remainder = absCents % ECONOMY_CONFIG.CENTS_PER_UNIT;
   const formattedUnits = units.toLocaleString("en-US");
   const formattedDecimals = remainder.toString().padStart(2, "0");
   const sign = isNegative ? "-" : "";
@@ -26,12 +27,12 @@ export function formatCents(cents: number, currency = "PHP"): string {
  */
 export function parseToCents(amountStr: string | number): number {
   if (typeof amountStr === "number") {
-    return Math.round(amountStr * 100);
+    return Math.round(amountStr * ECONOMY_CONFIG.CENTS_PER_UNIT);
   }
   const clean = amountStr.replace(/[^0-9.-]/g, "");
   const num = parseFloat(clean);
   if (isNaN(num)) return 0;
-  return Math.round(num * 100);
+  return Math.round(num * ECONOMY_CONFIG.CENTS_PER_UNIT);
 }
 
 /**
@@ -44,7 +45,7 @@ export function evaluateStreakOnAction(
 ): StreakEvaluationResult {
   if (!profile.last_logged_date) {
     return {
-      currentStreak: 1,
+      currentStreak: ECONOMY_CONFIG.STREAK.INITIAL_STREAK,
       consumedShield: false,
       shieldsRemaining: profile.streak_shields,
       streakReset: false,
@@ -63,9 +64,11 @@ export function evaluateStreakOnAction(
 
   const lastDate = new Date(profile.last_logged_date);
   const todayDate = new Date(todayDateStr);
-  const diffDays = Math.round((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+  const diffDays = Math.round(
+    (todayDate.getTime() - lastDate.getTime()) / ECONOMY_CONFIG.TIME.MS_PER_DAY
+  );
 
-  if (diffDays === 1) {
+  if (diffDays === ECONOMY_CONFIG.STREAK.CONSECUTIVE_DAY_DIFF) {
     // Consecutive day logged!
     return {
       currentStreak: profile.current_streak + 1,
@@ -75,18 +78,18 @@ export function evaluateStreakOnAction(
     };
   }
 
-  if (diffDays === 2) {
+  if (diffDays === ECONOMY_CONFIG.STREAK.SHIELD_GRACE_DAY_DIFF) {
     // Exactly 1 day missed! Check Streak Shield.
     if (profile.streak_shields > 0) {
       return {
         currentStreak: profile.current_streak + 1,
         consumedShield: true,
-        shieldsRemaining: profile.streak_shields - 1,
+        shieldsRemaining: profile.streak_shields - ECONOMY_CONFIG.STREAK.SHIELD_CONSUMPTION_COUNT,
         streakReset: false,
       };
     } else {
       return {
-        currentStreak: 1,
+        currentStreak: ECONOMY_CONFIG.STREAK.DEFAULT_RESET_STREAK,
         consumedShield: false,
         shieldsRemaining: 0,
         streakReset: true,
@@ -96,7 +99,7 @@ export function evaluateStreakOnAction(
 
   // More than 1 day missed: Streak resets
   return {
-    currentStreak: 1,
+    currentStreak: ECONOMY_CONFIG.STREAK.DEFAULT_RESET_STREAK,
     consumedShield: false,
     shieldsRemaining: profile.streak_shields,
     streakReset: true,
@@ -127,7 +130,7 @@ export function evaluateGoalUnlock(
       canUnlock: false,
       missingFunds,
       missingTokens,
-      reason: `Insufficient savings balance (${formatCents(missingFunds)} needed) and ${missingTokens} more TRK tokens required.`,
+      reason: `Insufficient savings balance (${formatCents(missingFunds)}) and ${missingTokens} more TRK tokens required.`,
     };
   }
 
