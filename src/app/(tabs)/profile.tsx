@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { ScrollView, Text, View, Pressable, Switch } from "react-native";
+import { ScrollView, Text, View, Pressable, Switch, Image } from "react-native";
 import { router } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useTraki } from "@/src/context/TrakiContext";
 import { useThemeContext } from "@/lib/theme-provider";
+import { useAuth } from "@/src/context/AuthContext";
 
 export default function ProfileScreen() {
   const { profile } = useTraki();
+  const { user, signOut } = useAuth();
   const { colorScheme, setColorScheme } = useThemeContext();
   const [showMechanics, setShowMechanics] = useState(false);
   const [showShortcutGuide, setShowShortcutGuide] = useState(false);
@@ -19,11 +21,36 @@ export default function ProfileScreen() {
     Math.round(((profile?.exp ?? 0) / expToNextLevel) * 100)
   );
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     } catch {}
+    await signOut();
     router.replace("/login");
+  };
+
+  const displayName = user?.displayName || (profile?.partner_name ? "Hunter" : "Player One");
+  const userInitials = user?.displayName
+    ? user.displayName
+        .split(" ")
+        .map((p) => p[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "TK";
+
+  const getProviderLabel = () => {
+    if (!user) return "Local Quest Profile";
+    switch (user.provider) {
+      case "google":
+        return "Google SSO";
+      case "apple":
+        return "Apple SSO";
+      case "stingray":
+        return "Stingray SSO";
+      default:
+        return "Authenticated";
+    }
   };
 
   return (
@@ -43,12 +70,12 @@ export default function ProfileScreen() {
         <View className="bg-white rounded-3xl p-5 border border-stone-200 mb-5 shadow-2xs">
           <View className="flex-row items-center gap-4 mb-4">
             <View className="h-16 w-16 rounded-2xl bg-[#AF221915] border-2 border-[#AF2219] items-center justify-center shadow-xs">
-              <Text className="text-2xl font-black text-[#AF2219]">TK</Text>
+              <Text className="text-2xl font-black text-[#AF2219]">{userInitials}</Text>
             </View>
             <View className="flex-1">
               <View className="flex-row items-center gap-2">
-                <Text className="text-lg font-black text-stone-900">
-                  {profile?.partner_name ? "Hunter" : "Player One"}
+                <Text className="text-lg font-black text-stone-900" numberOfLines={1}>
+                  {displayName}
                 </Text>
                 <View className="bg-[#AF221915] px-2.5 py-0.5 rounded-md border border-[#AF221930]">
                   <Text className="text-[10px] font-black text-[#AF2219]">
@@ -56,9 +83,28 @@ export default function ProfileScreen() {
                   </Text>
                 </View>
               </View>
-              <Text className="text-xs text-stone-500 font-medium mt-0.5">
-                Co-op Duo Partner: {profile?.partner_name ?? "Kira"}
+              <Text className="text-xs text-stone-500 font-medium mt-0.5" numberOfLines={1}>
+                {user?.email ? user.email : `Co-op Duo Partner: ${profile?.partner_name ?? "Kira"}`}
               </Text>
+              <View className="flex-row items-center gap-1.5 mt-1">
+                {user?.provider === "google" && (
+                  <Image
+                    source={require("../../../assets/images/logos/google.png")}
+                    className="w-3.5 h-3.5"
+                    resizeMode="contain"
+                  />
+                )}
+                {user?.provider === "apple" && (
+                  <Image
+                    source={require("../../../assets/images/logos/apple-logo.png")}
+                    className="w-3.5 h-3.5"
+                    resizeMode="contain"
+                  />
+                )}
+                <Text className="text-[10px] font-bold text-stone-600">
+                  {getProviderLabel()}
+                </Text>
+              </View>
             </View>
           </View>
 

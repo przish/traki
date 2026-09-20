@@ -1,68 +1,134 @@
-import React from "react";
-import { View, Text, Image, Pressable } from "react-native";
+import React, { useState } from "react";
+import { View, Text, Image, Pressable, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
+import { useAuth } from "@/src/context/AuthContext";
+import { AuthProviderType } from "@/src/types";
 
 export interface LoginMethodsProps {
   onSuccess?: () => void;
+  onError?: (error: string) => void;
 }
 
-export default function LoginMethods({ onSuccess }: LoginMethodsProps) {
+export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) {
   const router = useRouter();
+  const { signInWithGoogle, signInWithApple, signInWithSandbox, isAuthenticating } = useAuth();
+  const [activeProvider, setActiveProvider] = useState<AuthProviderType | null>(null);
 
-  const handleProviderLogin = (provider: string) => {
+  const handleProviderLogin = async (provider: AuthProviderType) => {
+    if (isAuthenticating) return;
+
+    setActiveProvider(provider);
     try {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch {}
-    if (onSuccess) {
-      onSuccess();
+
+    let result;
+    if (provider === "google") {
+      result = await signInWithGoogle({ allowSandbox: true });
+    } else if (provider === "apple") {
+      result = await signInWithApple({ allowSandbox: true });
     } else {
-      router.replace("/(tabs)");
+      result = await signInWithSandbox("stingray");
+    }
+
+    setActiveProvider(null);
+
+    if (result.success) {
+      try {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch {}
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.replace("/(tabs)");
+      }
+    } else if (!result.cancelled && result.error) {
+      try {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      } catch {}
+      if (onError) {
+        onError(result.error);
+      }
     }
   };
 
+  const isGoogleLoading = activeProvider === "google";
+  const isAppleLoading = activeProvider === "apple";
+  const isStingrayLoading = activeProvider === "stingray";
+
   return (
     <View className="gap-2.5 w-full">
+      {/* Google SSO Button */}
       <Pressable
-        className="flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908]"
+        disabled={isAuthenticating}
+        className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
+          isAuthenticating ? "opacity-60" : ""
+        }`}
         onPress={() => handleProviderLogin("google")}
       >
-        <Image
-          source={require("../assets/images/logos/google.png")}
-          className="w-4 h-4"
-          resizeMode="contain"
-        />
-        <Text className="text-center font-bold text-stone-800 text-sm">
-          Continue with Google
-        </Text>
+        {isGoogleLoading ? (
+          <ActivityIndicator size="small" color="#AF2219" />
+        ) : (
+          <>
+            <Image
+              source={require("../assets/images/logos/google.png")}
+              className="w-4 h-4"
+              resizeMode="contain"
+            />
+            <Text className="text-center font-bold text-stone-800 text-sm">
+              Continue with Google
+            </Text>
+          </>
+        )}
       </Pressable>
 
+      {/* Apple SSO Button */}
       <Pressable
-        className="flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908]"
+        disabled={isAuthenticating}
+        className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
+          isAuthenticating ? "opacity-60" : ""
+        }`}
         onPress={() => handleProviderLogin("apple")}
       >
-        <Image
-          source={require("../assets/images/logos/apple-logo.png")}
-          className="w-4 h-4"
-          resizeMode="contain"
-        />
-        <Text className="text-center font-bold text-stone-800 text-sm">
-          Continue with Apple
-        </Text>
+        {isAppleLoading ? (
+          <ActivityIndicator size="small" color="#AF2219" />
+        ) : (
+          <>
+            <Image
+              source={require("../assets/images/logos/apple-logo.png")}
+              className="w-4 h-4"
+              resizeMode="contain"
+            />
+            <Text className="text-center font-bold text-stone-800 text-sm">
+              Continue with Apple
+            </Text>
+          </>
+        )}
       </Pressable>
 
+      {/* Stingray Developer SSO Button */}
       <Pressable
-        className="flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908]"
+        disabled={isAuthenticating}
+        className={`flex-row items-center justify-center gap-2.5 w-full border border-[#A13024]/40 bg-white rounded-xl h-[42px] active:bg-[#AF221908] ${
+          isAuthenticating ? "opacity-60" : ""
+        }`}
         onPress={() => handleProviderLogin("stingray")}
       >
-        <Image
-          source={require("../assets/images/logos/dev-logo.png")}
-          className="w-8 h-4"
-          resizeMode="contain"
-        />
-        <Text className="text-center font-bold text-stone-800 text-sm">
-          Continue with Stingray
-        </Text>
+        {isStingrayLoading ? (
+          <ActivityIndicator size="small" color="#AF2219" />
+        ) : (
+          <>
+            <Image
+              source={require("../assets/images/logos/dev-logo.png")}
+              className="w-8 h-4"
+              resizeMode="contain"
+            />
+            <Text className="text-center font-bold text-stone-800 text-sm">
+              Continue with Stingray
+            </Text>
+          </>
+        )}
       </Pressable>
     </View>
   );

@@ -6,12 +6,14 @@ import {
   PlayerProfile,
   BossEncounter,
   SavingsGoal,
+  AuthSession,
 } from "../types";
 
 let dbInstance: any = null;
 
 // In-memory fallback for web environment
 const memoryStore = {
+  authSession: null as AuthSession | null,
   wallets: [
     { id: "w_cash", name: "Daily Cash", type: "cash", balance: 350000, currency: "PHP", color: "#3C9B55" },
     { id: "w_bank", name: "Main Bank", type: "bank", balance: 1850000, currency: "PHP", color: "#2B6CB0" },
@@ -214,6 +216,16 @@ async function initializeDatabase(db: any) {
       icon TEXT NOT NULL,
       tone TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS auth_session (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      avatar_url TEXT,
+      provider TEXT NOT NULL,
+      token TEXT,
+      created_at TEXT NOT NULL
+    );
   `);
 
   const profileRow = await db.getFirstAsync("SELECT id FROM player_profile LIMIT 1");
@@ -387,5 +399,40 @@ export const TrakiStorage = {
     if (sets.length) {
       await db.runAsync(`UPDATE player_profile SET ${sets.join(", ")}`, vals);
     }
+  },
+
+  saveAuthSession: async (session: AuthSession): Promise<void> => {
+    memoryStore.authSession = session;
+    const db = await getDatabase();
+    if (!db) return;
+    await db.runAsync("DELETE FROM auth_session");
+    await db.runAsync(
+      `INSERT INTO auth_session (id, email, display_name, avatar_url, provider, token, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        session.id,
+        session.email,
+        session.display_name,
+        session.avatar_url ?? null,
+        session.provider,
+        session.token ?? null,
+        session.created_at,
+      ]
+    );
+  },
+
+  getAuthSession: async (): Promise<AuthSession | null> => {
+    const db = await getDatabase();
+    if (!db) return memoryStore.authSession;
+    const row = await db.getFirstAsync("SELECT * FROM auth_session LIMIT 1");
+    if (!row) return memoryStore.authSession;
+    return row as AuthSession;
+  },
+
+  clearAuthSession: async (): Promise<void> => {
+    memoryStore.authSession = null;
+    const db = await getDatabase();
+    if (!db) return;
+    await db.runAsync("DELETE FROM auth_session");
   },
 };
