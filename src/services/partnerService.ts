@@ -1,16 +1,14 @@
 import { getSupabaseClient, isSupabaseConfigured } from "./supabaseClient";
 import { TrakiStorage } from "./db";
-
-const PARTNER_CODE_LENGTH = 6;
-const PARTNER_CODE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+import { PARTNER_CONFIG } from "../constants";
 
 /**
  * Generates a random alphanumeric invite code (uppercase, easy to read).
  */
 function generateCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // No I/O/0/1 to avoid confusion
+  const chars = PARTNER_CONFIG.ALPHABET;
   let code = "";
-  for (let i = 0; i < PARTNER_CODE_LENGTH; i++) {
+  for (let i = 0; i < PARTNER_CONFIG.CODE_LENGTH; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
@@ -23,7 +21,7 @@ export const PartnerService = {
    * that will need to be synced later.
    */
   generatePartnerCode: async (): Promise<{ code: string; expiresAt: string } | null> => {
-    const expiresAt = new Date(Date.now() + PARTNER_CODE_TTL_MS).toISOString();
+    const expiresAt = new Date(Date.now() + PARTNER_CONFIG.CODE_TTL_MS).toISOString();
     const code = generateCode();
 
     const supabase = getSupabaseClient();

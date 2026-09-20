@@ -32,8 +32,10 @@ import {
   signOutUser,
   signInWithApple,
   signInWithGoogle,
+  isGoogleOAuthReady,
 } from "../src/services/authService";
 import { TrakiStorage } from "../src/services/db";
+import { AUTH_CONFIG } from "../src/constants";
 
 describe("Single Sign-On (SSO) Authentication Suite", () => {
   beforeEach(async () => {
@@ -47,8 +49,8 @@ describe("Single Sign-On (SSO) Authentication Suite", () => {
       expect(result.success).toBe(true);
       expect(result.user).toBeDefined();
       expect(result.user?.provider).toBe("google");
-      expect(result.user?.email).toContain("google.hunter@traki.app");
-      expect(result.user?.displayName).toBe("Google Quest Hunter");
+      expect(result.user?.email).toBe(AUTH_CONFIG.DEMO_ACCOUNTS.GOOGLE[0].email);
+      expect(result.user?.displayName).toBe(AUTH_CONFIG.DEMO_ACCOUNTS.GOOGLE[0].displayName);
       expect(result.user?.token).toBeDefined();
 
       const savedUser = await getCurrentAuthUser();
@@ -79,19 +81,25 @@ describe("Single Sign-On (SSO) Authentication Suite", () => {
     });
 
     it("signs in with user-selected Google account details", async () => {
+      const demoUser = AUTH_CONFIG.DEMO_ACCOUNTS.GOOGLE[0];
       const result = await signInWithAccountDetails({
-        email: "irishpureza@gmail.com",
-        displayName: "Irish Pureza",
+        email: demoUser.email,
+        displayName: demoUser.displayName,
         provider: "google",
       });
 
       expect(result.success).toBe(true);
-      expect(result.user?.email).toBe("irishpureza@gmail.com");
-      expect(result.user?.displayName).toBe("Irish Pureza");
+      expect(result.user?.email).toBe(demoUser.email);
+      expect(result.user?.displayName).toBe(demoUser.displayName);
       expect(result.user?.provider).toBe("google");
 
       const profile = await TrakiStorage.getProfile();
-      expect(profile.partner_name).toBe("Irish");
+      expect(profile.partner_name).toBe(demoUser.displayName.split(" ")[0]);
+    });
+
+    it("verifies isGoogleOAuthReady status", () => {
+      const ready = isGoogleOAuthReady();
+      expect(typeof ready).toBe("boolean");
     });
   });
 
@@ -102,11 +110,13 @@ describe("Single Sign-On (SSO) Authentication Suite", () => {
       expect(result.success).toBe(true);
       expect(result.user).toBeDefined();
       expect(result.user?.provider).toBe("apple");
-      expect(result.user?.email).toContain("apple.hunter@traki.app");
-      expect(result.user?.displayName).toBe("Apple Quest Hunter");
+      expect(result.user?.email).toBe(AUTH_CONFIG.DEMO_ACCOUNTS.APPLE.sharedEmail);
+      expect(result.user?.displayName).toBe(AUTH_CONFIG.DEMO_ACCOUNTS.APPLE.displayName);
 
       const profile = await TrakiStorage.getProfile();
-      expect(profile.partner_name).toBe("Apple");
+      expect(profile.partner_name).toBe(
+        AUTH_CONFIG.DEMO_ACCOUNTS.APPLE.displayName.split(" ")[0]
+      );
     });
 
     it("falls back to sandbox when Apple Auth is unavailable on non-iOS/simulator environments", async () => {
@@ -119,14 +129,14 @@ describe("Single Sign-On (SSO) Authentication Suite", () => {
 
     it("signs in with Apple Private Relay selection from interactive SSO modal", async () => {
       const result = await signInWithAccountDetails({
-        email: "irish.relay@privaterelay.appleid.com",
-        displayName: "Irish Pureza",
+        email: AUTH_CONFIG.DEMO_ACCOUNTS.APPLE.relayEmail,
+        displayName: AUTH_CONFIG.DEMO_ACCOUNTS.APPLE.displayName,
         provider: "apple",
       });
 
       expect(result.success).toBe(true);
-      expect(result.user?.email).toBe("irish.relay@privaterelay.appleid.com");
-      expect(result.user?.displayName).toBe("Irish Pureza");
+      expect(result.user?.email).toBe(AUTH_CONFIG.DEMO_ACCOUNTS.APPLE.relayEmail);
+      expect(result.user?.displayName).toBe(AUTH_CONFIG.DEMO_ACCOUNTS.APPLE.displayName);
       expect(result.user?.provider).toBe("apple");
     });
 
@@ -202,7 +212,7 @@ describe("Single Sign-On (SSO) Authentication Suite", () => {
       await signInWithDevSandbox("google");
       const active = await getCurrentAuthUser();
       expect(active).not.toBeNull();
-      expect(active?.email).toBe("google.hunter@traki.app");
+      expect(active?.email).toBe(AUTH_CONFIG.DEMO_ACCOUNTS.GOOGLE[0].email);
     });
 
     it("clears session completely upon sign out", async () => {

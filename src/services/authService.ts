@@ -5,6 +5,7 @@ import * as ExpoAuthSession from "expo-auth-session";
 import { AuthUser, AuthSession as UserAuthSession } from "../types";
 import { TrakiStorage } from "./db";
 import { getSupabaseClient, isSupabaseConfigured } from "./supabaseClient";
+import { AUTH_CONFIG } from "../constants";
 
 // Ensure WebBrowser can handle redirects properly on web and native
 WebBrowser.maybeCompleteAuthSession();
@@ -16,12 +17,7 @@ export interface AuthResult {
   cancelled?: boolean;
 }
 
-const GOOGLE_DISCOVERY = {
-  authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
-  tokenEndpoint: "https://oauth2.googleapis.com/token",
-  revocationEndpoint: "https://oauth2.googleapis.com/revoke",
-  userInfoEndpoint: "https://www.googleapis.com/oauth2/v3/userinfo",
-};
+const GOOGLE_DISCOVERY = AUTH_CONFIG.GOOGLE_DISCOVERY;
 
 /**
  * Safe redirect URI helper for native, web, and test environments
@@ -29,10 +25,10 @@ const GOOGLE_DISCOVERY = {
 function getSafeRedirectUri(): string {
   try {
     if (typeof ExpoAuthSession.makeRedirectUri === "function") {
-      return ExpoAuthSession.makeRedirectUri({ scheme: "traki" });
+      return ExpoAuthSession.makeRedirectUri({ scheme: AUTH_CONFIG.APP_SCHEME });
     }
   } catch {}
-  return "traki://";
+  return `${AUTH_CONFIG.APP_SCHEME}://`;
 }
 
 /**
@@ -47,6 +43,17 @@ export async function isAppleAuthAvailable(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Checks if real Google OAuth credentials or Supabase OAuth is configured
+ */
+export function isGoogleOAuthReady(): boolean {
+  return (
+    isSupabaseConfigured() ||
+    Boolean(process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID) ||
+    Boolean(process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID)
+  );
 }
 
 /**
@@ -272,19 +279,29 @@ export async function signInWithDevSandbox(provider: "google" | "apple" | "sting
   const isApple = provider === "apple";
   const isStingray = provider === "stingray";
 
+  const email = isApple
+    ? AUTH_CONFIG.DEMO_ACCOUNTS.APPLE.sharedEmail
+    : isStingray
+    ? AUTH_CONFIG.DEMO_ACCOUNTS.STINGRAY.email
+    : AUTH_CONFIG.DEMO_ACCOUNTS.GOOGLE[0].email;
+
+  const displayName = isApple
+    ? AUTH_CONFIG.DEMO_ACCOUNTS.APPLE.displayName
+    : isStingray
+    ? AUTH_CONFIG.DEMO_ACCOUNTS.STINGRAY.displayName
+    : AUTH_CONFIG.DEMO_ACCOUNTS.GOOGLE[0].displayName;
+
+  const avatarUrl = isApple
+    ? undefined
+    : isStingray
+    ? AUTH_CONFIG.DEFAULT_AVATAR_URL
+    : AUTH_CONFIG.DEMO_ACCOUNTS.GOOGLE[0].avatarUrl || AUTH_CONFIG.DEFAULT_AVATAR_URL;
+
   const user: AuthUser = {
     id: `${provider}_demo_${Date.now().toString().slice(-6)}`,
-    email: isApple
-      ? "apple.hunter@traki.app"
-      : isStingray
-      ? "stingray.dev@traki.app"
-      : "google.hunter@traki.app",
-    displayName: isApple
-      ? "Apple Quest Hunter"
-      : isStingray
-      ? "Stingray Master"
-      : "Google Quest Hunter",
-    avatarUrl: isApple ? undefined : "https://lh3.googleusercontent.com/a/default-user",
+    email,
+    displayName,
+    avatarUrl,
     provider,
     token: `mock_jwt_token_${provider}_${Date.now()}`,
     createdAt: new Date().toISOString(),
