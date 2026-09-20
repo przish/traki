@@ -14,7 +14,7 @@ import Continue from "@/components/continue";
 import PartnerCard from "@/components/PartnerCard";
 
 export default function CombatScreen() {
-  const { profile, bosses, logTransaction, wallets, categories } = useTraki();
+  const { profile, bosses, logTransaction, wallets, categories, refreshData } = useTraki();
   const [activeTier, setActiveTier] = useState<"daily" | "weekly" | "monthly">("daily");
   const [floatingDamage, setFloatingDamage] = useState<{ id: number; text: string; isCrit: boolean } | null>(null);
 
@@ -67,6 +67,24 @@ export default function CombatScreen() {
             <Text className="text-xs text-stone-500 font-medium text-center leading-relaxed">
               Your first bosses will appear momentarily.{"\n"}Start logging expenses to deal damage!
             </Text>
+
+            <View className="flex-row gap-2.5 mt-5">
+              <Pressable
+                onPress={() => router.push("/quick-log")}
+                className="h-[42px] px-5 rounded-xl bg-[#AF2219] items-center justify-center active:bg-[#8F1E2C] shadow-xs flex-row gap-1.5"
+              >
+                <MaterialIcons name="flash-on" size={16} color="white" />
+                <Text className="text-white font-bold text-xs">Quick Log Expense</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => refreshData()}
+                className="h-[42px] px-4 rounded-xl border border-stone-200 bg-white items-center justify-center active:bg-stone-50 flex-row gap-1 shadow-2xs"
+              >
+                <MaterialIcons name="refresh" size={16} color="#57534E" />
+                <Text className="text-stone-700 font-bold text-xs">Refresh</Text>
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
       </ScreenContainer>
@@ -249,6 +267,15 @@ export default function CombatScreen() {
               <Text className="text-xs font-bold text-[#AF2219] mt-2 text-center">
                 Create a wallet & category in the Ledger tab to start striking bosses!
               </Text>
+              <Pressable
+                onPress={() => router.push("/(tabs)/tracker")}
+                className="mt-3 h-[40px] px-5 rounded-xl bg-[#AF2219] items-center justify-center active:bg-[#8F1E2C] flex-row items-center gap-1.5 shadow-xs"
+              >
+                <MaterialIcons name="account-balance-wallet" size={16} color="white" />
+                <Text className="text-white font-bold text-xs">
+                  Set Up Wallets & Categories
+                </Text>
+              </Pressable>
             </View>
           )}
         </View>
