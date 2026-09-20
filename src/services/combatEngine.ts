@@ -1,3 +1,5 @@
+import { COMBAT_CONFIG } from "../constants";
+
 export interface CombatCalculationInput {
   streakDays: number;
   todayLogCount: number; // How many transactions already logged today
@@ -11,55 +13,66 @@ export interface DamageBreakdown {
   isCrit: boolean;
   critMultiplier: number;
   totalDamage: number;
-  dailyDamage: number; // 100%
-  weeklyCleave: number; // 35%
-  monthlyCleave: number; // 15%
+  dailyDamage: number;
+  weeklyCleave: number;
+  monthlyCleave: number;
 }
 
 /**
  * Calculates streak multiplier based on consecutive logging streak.
  */
 export function getStreakMultiplier(streakDays: number): number {
-  if (streakDays <= 1) return 1.0;
-  if (streakDays <= 3) return 1.25;
-  if (streakDays <= 6) return 1.5;
-  if (streakDays <= 13) return 1.75;
-  return 2.0;
+  for (const tier of COMBAT_CONFIG.STREAK_TIERS) {
+    if (streakDays <= tier.maxDays) {
+      return tier.multiplier;
+    }
+  }
+  return COMBAT_CONFIG.MAX_STREAK_MULTIPLIER;
 }
 
 /**
  * Anti-spam diminishing returns:
- * Transactions 1-5 deal full damage (1.0x).
- * Transaction 6 deals 50% damage (0.5x).
- * Transaction 7 deals 30% damage (0.3x).
- * Transaction 8+ deals 10% damage (0.1x).
+ * Transactions below full efficiency limit deal 1.0x damage.
+ * Diminishing tiers apply successively.
  */
 export function getDiminishingMultiplier(todayLogCount: number): number {
-  if (todayLogCount < 5) return 1.0;
-  if (todayLogCount === 5) return 0.5;
-  if (todayLogCount === 6) return 0.3;
-  return 0.1;
+  const { DIMINISHING_RETURNS } = COMBAT_CONFIG;
+  if (todayLogCount < DIMINISHING_RETURNS.FULL_EFFICIENCY_LIMIT) {
+    return 1.0;
+  }
+  if (todayLogCount === DIMINISHING_RETURNS.TIER_1_LOG_COUNT) {
+    return DIMINISHING_RETURNS.TIER_1_MULTIPLIER;
+  }
+  if (todayLogCount === DIMINISHING_RETURNS.TIER_2_LOG_COUNT) {
+    return DIMINISHING_RETURNS.TIER_2_MULTIPLIER;
+  }
+  return DIMINISHING_RETURNS.EXHAUSTION_MULTIPLIER;
 }
 
 /**
  * Computes deterministic combat strike damage and concurrent cleaves.
  */
 export function calculateCombatStrike(input: CombatCalculationInput): DamageBreakdown {
-  const baseDamage = 100;
+  const baseDamage = COMBAT_CONFIG.BASE_DAMAGE;
   const streakMultiplier = getStreakMultiplier(input.streakDays);
   const diminishingMultiplier = getDiminishingMultiplier(input.todayLogCount);
 
-  // 15% chance of critical strike unless deterministic override provided
-  const isCrit = input.isTestCrit !== undefined ? input.isTestCrit : Math.random() < 0.15;
-  const critMultiplier = isCrit ? 1.5 : 1.0;
+  // Critical strike determination
+  const isCrit =
+    input.isTestCrit !== undefined
+      ? input.isTestCrit
+      : Math.random() < COMBAT_CONFIG.CRIT.DEFAULT_CHANCE;
+  const critMultiplier = isCrit
+    ? COMBAT_CONFIG.CRIT.DAMAGE_MULTIPLIER
+    : COMBAT_CONFIG.CRIT.NORMAL_MULTIPLIER;
 
   const rawTotal = baseDamage * streakMultiplier * diminishingMultiplier * critMultiplier;
-  const totalDamage = Math.max(1, Math.round(rawTotal));
+  const totalDamage = Math.max(COMBAT_CONFIG.MIN_DAMAGE, Math.round(rawTotal));
 
-  // Cleave distribution: 100% Daily, 35% Weekly, 15% Monthly
-  const dailyDamage = totalDamage;
-  const weeklyCleave = Math.round(totalDamage * 0.35);
-  const monthlyCleave = Math.round(totalDamage * 0.15);
+  // Cleave distribution across active boss encounters
+  const dailyDamage = Math.round(totalDamage * COMBAT_CONFIG.CLEAVE.DAILY_PROPORTION);
+  const weeklyCleave = Math.round(totalDamage * COMBAT_CONFIG.CLEAVE.WEEKLY_PROPORTION);
+  const monthlyCleave = Math.round(totalDamage * COMBAT_CONFIG.CLEAVE.MONTHLY_PROPORTION);
 
   return {
     baseDamage,
