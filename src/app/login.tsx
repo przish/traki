@@ -60,130 +60,133 @@ export default function Login() {
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: "center",
+            justifyContent: "space-between",
             paddingHorizontal: 24,
-            paddingVertical: 12,
+            paddingTop: 4,
+            paddingBottom: 16,
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          <View className="w-full max-w-[420px] self-center items-center">
-            <View className="w-full flex-row items-center mb-1">
+          <View className="w-full max-w-[420px] self-center flex-1 justify-between">
+            {/* Top Area: Navigation, Branding, Header, Form */}
+            <View className="w-full">
               <BackButton />
+
+              <View className="items-center my-1">
+                <Logo size={74} className="my-1" />
+                <Text className="text-[#AF2219] text-2xl font-black tracking-tight text-center">
+                  Welcome Back
+                </Text>
+                <Text className="text-stone-500 text-xs text-center font-medium mt-0.5">
+                  Log in to continue your habit quest
+                </Text>
+              </View>
+
+              {activeError ? (
+                <View className="w-full bg-red-50 border border-red-200 rounded-xl p-3 my-2 flex-row items-center justify-between">
+                  <Text className="text-red-700 text-xs font-semibold flex-1 mr-2">
+                    {activeError}
+                  </Text>
+                  <Pressable
+                    onPress={() => {
+                      setLocalError(null);
+                      clearError();
+                    }}
+                  >
+                    <MaterialCommunityIcons name="close-circle" size={18} color="#AF2219" />
+                  </Pressable>
+                </View>
+              ) : null}
+
+              <View className="w-full gap-3 mt-2">
+                <View className="gap-1.5">
+                  <Text className="text-stone-700 text-xs font-bold uppercase tracking-wider">
+                    Email or Username
+                  </Text>
+                  <TextField
+                    placeholder="e.g. hunter@traki.app"
+                    value={identifier}
+                    onChangeText={setIdentifier}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
+
+                <View className="gap-1.5">
+                  <Text className="text-stone-700 text-xs font-bold uppercase tracking-wider">
+                    Password
+                  </Text>
+                  <View className="relative justify-center">
+                    <TextField
+                      placeholder="Enter your secret pass"
+                      secureTextEntry={!showPassword}
+                      value={password}
+                      onChangeText={setPassword}
+                      className="pr-12"
+                    />
+                    <Pressable
+                      onPress={toggleShowPassword}
+                      className="absolute right-3.5 h-full justify-center"
+                    >
+                      <MaterialCommunityIcons
+                        name={showPassword ? "eye-off" : "eye"}
+                        size={20}
+                        color="#AF2219"
+                      />
+                    </Pressable>
+                  </View>
+                </View>
+
+                <View className="items-end py-0.5">
+                  <Pressable
+                    onPress={() => {
+                      router.push("/resetPassword");
+                    }}
+                  >
+                    <Text className="text-xs font-bold text-[#AF2219]">
+                      Forgot password?
+                    </Text>
+                  </Pressable>
+                </View>
+
+                <Continue
+                  title="Log In & Battle"
+                  disabled={!isFormValid || isLoading}
+                  loading={isLoading}
+                  onPress={handleLogin}
+                />
+
+                <ORdivider />
+
+                <LoginMethods
+                  onSuccess={() => router.replace("/(tabs)")}
+                  onError={(err) => setLocalError(err)}
+                />
+              </View>
             </View>
 
-            <Logo size={90} className="my-1" />
-
-        <View className="my-2">
-          <Text className="text-[#AF2219] text-2xl font-black tracking-tight">
-            Welcome Back
-          </Text>
-          <Text className="text-stone-500 text-xs text-center font-medium mt-0.5">
-            Log in to continue your habit quest
-          </Text>
-        </View>
-
-        {activeError ? (
-          <View className="w-full bg-red-50 border border-red-200 rounded-xl p-3 my-2 flex-row items-center justify-between">
-            <Text className="text-red-700 text-xs font-semibold flex-1 mr-2">
-              {activeError}
-            </Text>
-            <Pressable
-              onPress={() => {
-                setLocalError(null);
-                clearError();
-              }}
-            >
-              <MaterialCommunityIcons name="close-circle" size={18} color="#AF2219" />
-            </Pressable>
-          </View>
-        ) : null}
-
-        <View className="w-full gap-3 mt-2">
-          <View className="gap-1.5">
-            <Text className="text-stone-700 text-xs font-bold uppercase tracking-wider">
-              Email or Username
-            </Text>
-            <TextField
-              placeholder="e.g. hunter@traki.app"
-              value={identifier}
-              onChangeText={setIdentifier}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-          </View>
-
-          <View className="gap-1.5">
-            <Text className="text-stone-700 text-xs font-bold uppercase tracking-wider">
-              Password
-            </Text>
-            <View className="relative justify-center">
-              <TextField
-                placeholder="Enter your secret pass"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-                className="pr-12"
-              />
+            {/* Bottom Footer Link */}
+            <View className="items-center pt-4 pb-2">
               <Pressable
-                onPress={toggleShowPassword}
-                className="absolute right-3.5 h-full justify-center"
+                onPress={() => {
+                  router.replace("/signUp");
+                }}
               >
-                <MaterialCommunityIcons
-                  name={showPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color="#AF2219"
-                />
+                {({ pressed }) => (
+                  <Text
+                    className={`text-[#AF2219] text-sm font-semibold ${
+                      pressed ? "underline opacity-80" : ""
+                    }`}
+                  >
+                    No account yet? <Text className="font-bold underline">Sign Up</Text>
+                  </Text>
+                )}
               </Pressable>
             </View>
           </View>
-
-          <View className="items-end py-1">
-            <Pressable
-              onPress={() => {
-                router.push("/resetPassword");
-              }}
-            >
-              <Text className="text-xs font-bold text-[#AF2219]">
-                Forgot password?
-              </Text>
-            </Pressable>
-          </View>
-
-          <Continue
-            title="Log In & Battle"
-            disabled={!isFormValid || isLoading}
-            loading={isLoading}
-            onPress={handleLogin}
-          />
-
-          <ORdivider />
-
-          <LoginMethods
-            onSuccess={() => router.replace("/(tabs)")}
-            onError={(err) => setLocalError(err)}
-          />
-        </View>
-
-        <View className="mt-5 mb-2">
-          <Pressable
-            onPress={() => {
-              router.replace("/signUp");
-            }}
-          >
-            {({ pressed }) => (
-              <Text
-                className={`text-[#AF2219] text-sm font-semibold ${
-                  pressed ? "underline opacity-80" : ""
-                }`}
-              >
-                No account yet? <Text className="font-bold underline">Sign Up</Text>
-              </Text>
-            )}
-          </Pressable>
-        </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
     </KeyboardAvoidingView>
   </SafeAreaView>
   );
