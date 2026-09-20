@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "traki",
+    "slug": "traki",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logos/traki-logo.png",
+    "scheme": "traki",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/logos/traki-logo.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/logos/traki-logo.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#208AEF",
+          "image": "./assets/images/logos/traki-logo.png",
+          "imageWidth": 76
+        }
+      ],
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
