@@ -1,5 +1,3 @@
-// NativeWind + Pressable: className can swallow onPress. Disable className mapping globally.
-import { Pressable } from "react-native";
-import { remapProps } from "nativewind";
+// Pressable works natively with NativeWind v4 cssInterop and style compilation
+export {};
 
-remapProps(Pressable, { className: false });

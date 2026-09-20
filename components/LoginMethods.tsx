@@ -79,6 +79,8 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
             return;
           } else if (result.cancelled) {
             return;
+          } else {
+            console.log("Native Apple auth returned error, falling back to SSO modal:", result.error);
           }
         } catch (err) {
           console.log("Native Apple auth unavailable, falling back to SSO modal:", err);
@@ -168,7 +170,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         {isGoogleLoading ? (
           <ActivityIndicator size="small" color={THEME_CONFIG.COLORS.BRAND} />
         ) : (
-          <>
+          <View pointerEvents="none" className="flex-row items-center justify-center gap-2.5">
             <Image
               source={require("../assets/images/logos/google.png")}
               style={{ width: 18, height: 18 }}
@@ -178,7 +180,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
             <Text className="text-center font-bold text-stone-800 text-sm">
               Continue with Google
             </Text>
-          </>
+          </View>
         )}
       </Pressable>
 
@@ -193,7 +195,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         {isAppleLoading ? (
           <ActivityIndicator size="small" color={THEME_CONFIG.COLORS.BRAND} />
         ) : (
-          <>
+          <View pointerEvents="none" className="flex-row items-center justify-center gap-2.5">
             <Image
               source={require("../assets/images/logos/apple-logo.png")}
               style={{ width: 18, height: 18 }}
@@ -203,7 +205,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
             <Text className="text-center font-bold text-stone-800 text-sm">
               Continue with Apple
             </Text>
-          </>
+          </View>
         )}
       </Pressable>
 
@@ -218,7 +220,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
         {isStingrayLoading ? (
           <ActivityIndicator size="small" color={THEME_CONFIG.COLORS.BRAND} />
         ) : (
-          <>
+          <View pointerEvents="none" className="flex-row items-center justify-center gap-2.5">
             <Image
               source={require("../assets/images/logos/dev-logo.png")}
               style={{ width: 32, height: 18 }}
@@ -228,7 +230,7 @@ export default function LoginMethods({ onSuccess, onError }: LoginMethodsProps) 
             <Text className="text-center font-bold text-stone-800 text-sm">
               Continue with Stingray
             </Text>
-          </>
+          </View>
         )}
       </Pressable>
 

@@ -8,6 +8,7 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
+  StyleSheet,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
@@ -77,13 +78,16 @@ export default function SSOModal({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable
-        className="flex-1 bg-black/60 justify-end sm:justify-center items-center p-0 sm:p-4"
-        onPress={onClose}
-      >
+      <View style={StyleSheet.absoluteFill} className="justify-end sm:justify-center items-center p-0 sm:p-4">
+        {/* Backdrop overlay - dismisses modal when tapping outside */}
         <Pressable
+          style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.6)" }]}
+          onPress={onClose}
+        />
+
+        {/* Modal Card - standalone sibling to guarantee native touch responsiveness */}
+        <View
           className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-stone-200 overflow-hidden"
-          onPress={(e) => e.stopPropagation()}
         >
           {/* Top Grabber bar for mobile sheets */}
           <View className="items-center mb-3 sm:hidden">
@@ -308,8 +312,8 @@ export default function SSOModal({
           >
             <Text className="text-xs font-semibold text-stone-500">Cancel</Text>
           </Pressable>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
