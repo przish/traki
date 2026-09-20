@@ -18,35 +18,9 @@ export default function CombatScreen() {
   const [floatingDamage, setFloatingDamage] = useState<{ id: number; text: string; isCrit: boolean } | null>(null);
   const [partnerPoked, setPartnerPoked] = useState(false);
 
-  const dailyBoss = bosses.find((b) => b.tier === "daily") || {
-    name: "Imp of Impulsive Buys",
-    title: "Daily Mob",
-    current_hp: 250,
-    max_hp: 500,
-    gold_reward: 120,
-    exp_reward: 50,
-    trk_reward: 0,
-  };
-
-  const weeklyBoss = bosses.find((b) => b.tier === "weekly") || {
-    name: "The Interest Behemoth",
-    title: "Weekly Miniboss",
-    current_hp: 1350,
-    max_hp: 2000,
-    gold_reward: 500,
-    exp_reward: 250,
-    trk_reward: 3,
-  };
-
-  const monthlyBoss = bosses.find((b) => b.tier === "monthly") || {
-    name: "Titan of Inflation",
-    title: "Monthly Titan",
-    current_hp: 6100,
-    max_hp: 8000,
-    gold_reward: 2000,
-    exp_reward: 1000,
-    trk_reward: 10,
-  };
+  const dailyBoss = bosses.find((b) => b.tier === "daily");
+  const weeklyBoss = bosses.find((b) => b.tier === "weekly");
+  const monthlyBoss = bosses.find((b) => b.tier === "monthly");
 
   const currentBoss =
     activeTier === "daily" ? dailyBoss : activeTier === "weekly" ? weeklyBoss : monthlyBoss;
@@ -54,10 +28,12 @@ export default function CombatScreen() {
   const handleQuickStrike = async () => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    } catch {}
+    } catch { }
 
-    const walletId = wallets[0]?.id ?? "w_cash";
-    const catId = categories[0]?.id ?? "c_food";
+    if (wallets.length === 0 || categories.length === 0) return;
+
+    const walletId = wallets[0].id;
+    const catId = categories[0].id;
 
     const res = await logTransaction(50, catId, walletId, "Quick Habit Strike");
     const dmgText = res.isCrit ? `CRIT! -${res.totalDamage}` : `-${res.totalDamage} DMG`;
@@ -68,19 +44,48 @@ export default function CombatScreen() {
   const handlePokePartner = () => {
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch {}
+    } catch { }
     setPartnerPoked(true);
     setTimeout(() => setPartnerPoked(false), 3000);
   };
 
-  const bossHpPercent = Math.max(
-    0,
-    Math.min(100, Math.round((currentBoss.current_hp / currentBoss.max_hp) * 100))
-  );
+  const bossHpPercent = currentBoss
+    ? Math.max(0, Math.min(100, Math.round((currentBoss.current_hp / currentBoss.max_hp) * 100)))
+    : 0;
+
+  // Empty boss state
+  if (!currentBoss) {
+    return (
+      <ScreenContainer className="px-4 pt-2">
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+          <View className="py-3 mb-2">
+            <Text className="text-[10px] font-black uppercase tracking-widest text-[#AF2219]">
+              Combat Arena
+            </Text>
+            <Text className="text-2xl font-black text-stone-900">Awaiting Bosses</Text>
+          </View>
+
+          <View className="bg-white rounded-3xl p-8 border border-stone-200 items-center justify-center shadow-2xs">
+            <View className="h-20 w-20 rounded-2xl bg-[#AF221915] border-2 border-[#AF221930] items-center justify-center mb-4">
+              <MaterialIcons name="sports-kabaddi" size={40} color="#AF2219" />
+            </View>
+            <Text className="text-lg font-black text-stone-900 text-center mb-2">
+              Boss encounters are spawning...
+            </Text>
+            <Text className="text-xs text-stone-500 font-medium text-center leading-relaxed">
+              Your first bosses will appear momentarily.{"\n"}Start logging expenses to deal damage!
+            </Text>
+          </View>
+        </ScrollView>
+      </ScreenContainer>
+    );
+  }
+
+  const canStrike = wallets.length > 0 && categories.length > 0;
 
   return (
     <ScreenContainer className="px-4 pt-2">
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Top Header & Currencies HUD */}
         <View className="flex-row items-center justify-between py-3 mb-2">
           <View className="flex-row items-center gap-2.5">
@@ -119,45 +124,27 @@ export default function CombatScreen() {
         <View className="flex-row p-1 bg-stone-100 rounded-2xl border border-stone-200 mb-4">
           <Pressable
             onPress={() => setActiveTier("daily")}
-            className={`flex-1 py-2 rounded-xl items-center justify-center ${
-              activeTier === "daily" ? "bg-[#AF2219] shadow-xs" : ""
-            }`}
+            className={`flex-1 py-2 rounded-xl items-center justify-center ${activeTier === "daily" ? "bg-[#AF2219] shadow-xs" : ""}`}
           >
-            <Text
-              className={`text-xs font-black ${
-                activeTier === "daily" ? "text-white" : "text-stone-600"
-              }`}
-            >
+            <Text className={`text-xs font-black ${activeTier === "daily" ? "text-white" : "text-stone-600"}`}>
               Daily Mob
             </Text>
           </Pressable>
 
           <Pressable
             onPress={() => setActiveTier("weekly")}
-            className={`flex-1 py-2 rounded-xl items-center justify-center ${
-              activeTier === "weekly" ? "bg-[#AF2219] shadow-xs" : ""
-            }`}
+            className={`flex-1 py-2 rounded-xl items-center justify-center ${activeTier === "weekly" ? "bg-[#AF2219] shadow-xs" : ""}`}
           >
-            <Text
-              className={`text-xs font-black ${
-                activeTier === "weekly" ? "text-white" : "text-stone-600"
-              }`}
-            >
+            <Text className={`text-xs font-black ${activeTier === "weekly" ? "text-white" : "text-stone-600"}`}>
               Weekly Miniboss
             </Text>
           </Pressable>
 
           <Pressable
             onPress={() => setActiveTier("monthly")}
-            className={`flex-1 py-2 rounded-xl items-center justify-center ${
-              activeTier === "monthly" ? "bg-[#AF2219] shadow-xs" : ""
-            }`}
+            className={`flex-1 py-2 rounded-xl items-center justify-center ${activeTier === "monthly" ? "bg-[#AF2219] shadow-xs" : ""}`}
           >
-            <Text
-              className={`text-xs font-black ${
-                activeTier === "monthly" ? "text-white" : "text-stone-600"
-              }`}
-            >
+            <Text className={`text-xs font-black ${activeTier === "monthly" ? "text-white" : "text-stone-600"}`}>
               Monthly Titan
             </Text>
           </Pressable>
@@ -189,8 +176,8 @@ export default function CombatScreen() {
                     activeTier === "daily"
                       ? "pest-control"
                       : activeTier === "weekly"
-                      ? "security"
-                      : "gavel"
+                        ? "security"
+                        : "gavel"
                   }
                   size={42}
                   color="#AF2219"
@@ -209,9 +196,7 @@ export default function CombatScreen() {
             {floatingDamage && (
               <View className="absolute top-6 items-center">
                 <Text
-                  className={`text-xl font-black ${
-                    floatingDamage.isCrit ? "text-[#AF2219] text-2xl" : "text-amber-500"
-                  }`}
+                  className={`text-xl font-black ${floatingDamage.isCrit ? "text-[#AF2219] text-2xl" : "text-amber-500"}`}
                 >
                   {floatingDamage.text}
                 </Text>
@@ -251,46 +236,68 @@ export default function CombatScreen() {
 
         {/* Combat Action Buttons */}
         <View className="gap-2.5 mb-5">
-          <Continue
-            title="⚡ 3-Second Quick Log & Strike"
-            onPress={() => router.push("/quick-log")}
-          />
-
-          <Pressable
-            onPress={handleQuickStrike}
-            className="h-[44px] rounded-xl bg-white border border-[#A13024] items-center justify-center active:bg-[#AF221910]"
-          >
-            <Text className="text-[#AF2219] font-bold text-sm">
-              Quick Strike (Test Log ₱50)
-            </Text>
-          </Pressable>
+          {canStrike ? (
+            <>
+              <Continue
+                title="⚡ 3-Second Quick Log & Strike"
+                onPress={() => router.push("/quick-log")}
+              />
+              <Pressable
+                onPress={handleQuickStrike}
+                className="h-[44px] rounded-xl bg-white border border-[#A13024] items-center justify-center active:bg-[#AF221910]"
+              >
+                <Text className="text-[#AF2219] font-bold text-sm">
+                  Quick Strike (Test Log ₱50)
+                </Text>
+              </Pressable>
+            </>
+          ) : (
+            <View className="bg-[#AF221908] border border-[#AF221920] rounded-2xl p-4 items-center">
+              <MaterialIcons name="info-outline" size={20} color="#AF2219" />
+              <Text className="text-xs font-bold text-[#AF2219] mt-2 text-center">
+                Create a wallet & category in the Ledger tab to start striking bosses!
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Co-Op Duo Banner */}
-        <View className="bg-white rounded-2xl p-4 border border-stone-200 mb-4 flex-row items-center justify-between shadow-2xs">
-          <View className="flex-row items-center gap-3">
-            <View className="h-10 w-10 rounded-full bg-[#AF221915] border border-[#AF221930] items-center justify-center">
-              <MaterialIcons name="favorite" size={20} color="#AF2219" />
+        {profile?.partner_name ? (
+          <View className="bg-white rounded-2xl p-4 border border-stone-200 mb-4 flex-row items-center justify-between shadow-2xs">
+            <View className="flex-row items-center gap-3">
+              <View className="h-10 w-10 rounded-full bg-[#AF221915] border border-[#AF221930] items-center justify-center">
+                <MaterialIcons name="favorite" size={20} color="#AF2219" />
+              </View>
+              <View>
+                <Text className="text-xs font-bold text-stone-900">
+                  Partner: {profile.partner_name}
+                </Text>
+                <Text className="text-[11px] text-stone-500 font-medium">
+                  {profile.partner_streak ?? 0}-Day Shared Streak Sync
+                </Text>
+              </View>
             </View>
-            <View>
-              <Text className="text-xs font-bold text-stone-900">
-                Partner: {profile?.partner_name ?? "Kira"}
-              </Text>
-              <Text className="text-[11px] text-stone-500 font-medium">
-                {profile?.partner_streak ?? 5}-Day Shared Streak Sync
-              </Text>
-            </View>
-          </View>
 
-          <Pressable
-            onPress={handlePokePartner}
-            className="px-3 py-1.5 rounded-lg bg-[#AF221915] border border-[#AF221940]"
-          >
-            <Text className="text-xs font-bold text-[#AF2219]">
-              {partnerPoked ? "Poked! ❤️" : "Poke Partner"}
+            <Pressable
+              onPress={handlePokePartner}
+              className="px-3 py-1.5 rounded-lg bg-[#AF221915] border border-[#AF221940]"
+            >
+              <Text className="text-xs font-bold text-[#AF2219]">
+                {partnerPoked ? "Poked! ❤️" : "Poke Partner"}
+              </Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View className="bg-white rounded-2xl p-4 border border-stone-200 mb-4 items-center shadow-2xs">
+            <View className="flex-row items-center gap-2 mb-1">
+              <MaterialIcons name="people" size={18} color="#AF2219" />
+              <Text className="text-xs font-bold text-stone-900">No partner linked yet</Text>
+            </View>
+            <Text className="text-[11px] text-stone-500 font-medium text-center">
+              Connect with your partner in the Profile tab to unlock Duo Streaks!
             </Text>
-          </Pressable>
-        </View>
+          </View>
+        )}
       </ScrollView>
     </ScreenContainer>
   );
