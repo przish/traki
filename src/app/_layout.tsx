@@ -7,6 +7,7 @@ import "react-native-reanimated";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { AuthProvider } from "@/src/context/AuthContext";
 import { TrakiProvider } from "@/src/context/TrakiContext";
 import { useFonts } from "expo-font";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -89,9 +90,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <SafeAreaProvider>
-          <TrakiProvider>
-            <AppShell />
-          </TrakiProvider>
+          <AuthProvider>
+            <TrakiProvider>
+              <AppShell />
+            </TrakiProvider>
+          </AuthProvider>
         </SafeAreaProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

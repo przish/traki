@@ -87,3 +87,26 @@ export interface CombatStrikeResult {
   expEarned: number;
   defeatedBosses: BossTier[];
 }
+
+export type AuthProviderType = "google" | "apple" | "stingray" | "email" | "guest";
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  displayName: string;
+  avatarUrl?: string;
+  provider: AuthProviderType;
+  token?: string;
+  createdAt: string;
+}
+
+export interface AuthSession {
+  id: string;
+  email: string;
+  display_name: string;
+  avatar_url?: string;
+  provider: AuthProviderType;
+  token?: string;
+  created_at: string;
+}
+

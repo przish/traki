@@ -11,6 +11,7 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.traki.app",
+    usesAppleSignIn: true,
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
@@ -33,6 +34,7 @@ const config: ExpoConfig = {
     "expo-font",
     "expo-image",
     "expo-status-bar",
+    "expo-apple-authentication",
   ],
   experiments: {
     typedRoutes: true,

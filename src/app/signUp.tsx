@@ -14,12 +14,20 @@ import Continue from "../../components/continue";
 import Logo from "../../components/logo";
 import ORdivider from "../../components/ORdivider";
 import LoginMethods from "../../components/LoginMethods";
+import { useAuth } from "@/src/context/AuthContext";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function SignUp() {
   const router = useRouter();
+  const { error: contextError, clearError } = useAuth();
   const [email, setEmail] = useState("");
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  const activeError = localError || contextError;
 
   const handleContinue = () => {
+    setLocalError(null);
+    clearError();
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch {}
@@ -52,7 +60,23 @@ export default function SignUp() {
           </Text>
         </View>
 
-        <View className="w-full gap-3 mt-4">
+        {activeError ? (
+          <View className="w-full bg-red-50 border border-red-200 rounded-xl p-3 my-2 flex-row items-center justify-between">
+            <Text className="text-red-700 text-xs font-semibold flex-1 mr-2">
+              {activeError}
+            </Text>
+            <Pressable
+              onPress={() => {
+                setLocalError(null);
+                clearError();
+              }}
+            >
+              <MaterialCommunityIcons name="close-circle" size={18} color="#AF2219" />
+            </Pressable>
+          </View>
+        ) : null}
+
+        <View className="w-full gap-3 mt-2">
           <View className="gap-1.5">
             <Text className="text-stone-700 text-xs font-bold uppercase tracking-wider">
               Email Address
@@ -73,7 +97,10 @@ export default function SignUp() {
 
           <ORdivider />
 
-          <LoginMethods onSuccess={() => router.replace("/(tabs)")} />
+          <LoginMethods
+            onSuccess={() => router.replace("/(tabs)")}
+            onError={(err) => setLocalError(err)}
+          />
         </View>
 
         <View className="mt-8">
