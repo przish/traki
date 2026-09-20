@@ -66,10 +66,7 @@ export default function ProfileScreen() {
 
   // Code expiry countdown
   useEffect(() => {
-    if (!codeExpiresAt) {
-      setTimeRemaining("");
-      return;
-    }
+    if (!codeExpiresAt) return;
     const interval = setInterval(() => {
       const diff = new Date(codeExpiresAt).getTime() - Date.now();
       if (diff <= 0) {

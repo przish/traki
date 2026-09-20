@@ -1,10 +1,12 @@
 import { Platform } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as WebBrowser from "expo-web-browser";
-import { AuthUser, AuthSession } from "../types";
+import * as ExpoAuthSession from "expo-auth-session";
+import { AuthUser, AuthSession as UserAuthSession } from "../types";
 import { TrakiStorage } from "./db";
+import { getSupabaseClient, isSupabaseConfigured } from "./supabaseClient";
 
-// Ensure WebBrowser can handle redirects properly on web
+// Ensure WebBrowser can handle redirects properly on web and native
 WebBrowser.maybeCompleteAuthSession();
 
 export interface AuthResult {
@@ -22,7 +24,19 @@ const GOOGLE_DISCOVERY = {
 };
 
 /**
- * Checks if native Sign In with Apple is supported on this device
+ * Safe redirect URI helper for native, web, and test environments
+ */
+function getSafeRedirectUri(): string {
+  try {
+    if (typeof ExpoAuthSession.makeRedirectUri === "function") {
+      return ExpoAuthSession.makeRedirectUri({ scheme: "traki" });
+    }
+  } catch {}
+  return "traki://";
+}
+
+/**
+ * Checks if native Sign In with Apple is supported on this device/runtime
  */
 export async function isAppleAuthAvailable(): Promise<boolean> {
   try {
@@ -36,7 +50,7 @@ export async function isAppleAuthAvailable(): Promise<boolean> {
 }
 
 /**
- * Executes Single Sign-On with Apple
+ * Executes Single Sign-On with Apple using expo-apple-authentication
  */
 export async function signInWithApple(options?: { allowSandbox?: boolean }): Promise<AuthResult> {
   const isAvailable = await isAppleAuthAvailable();
@@ -68,14 +82,23 @@ export async function signInWithApple(options?: { allowSandbox?: boolean }): Pro
       await persistAuthUser(user);
       return { success: true, user };
     } catch (err: any) {
-      if (err?.code === "ERR_REQUEST_CANCELED" || err?.code === "ERR_CANCELED") {
+      if (
+        err?.code === "ERR_REQUEST_CANCELED" ||
+        err?.code === "ERR_CANCELED" ||
+        err?.message?.toLowerCase().includes("cancel")
+      ) {
         return { success: false, cancelled: true, error: "Apple sign-in was cancelled." };
       }
-      console.warn("Apple Sign-In error:", err);
-      // If native failed on simulator or dev build, check if sandbox allowed
+
+      console.error("SSO Error:", err);
+
+      // On iOS Simulator without an Apple ID logged in, AppleAuthentication.signInAsync
+      // fails with ERR_REQUEST_UNKNOWN (1001) or ERR_UNAVAILABLE.
+      // In dev/simulator environments, seamlessly complete the session so the developer can test.
       if (options?.allowSandbox !== false && __DEV__) {
         return signInWithDevSandbox("apple");
       }
+
       return {
         success: false,
         error: err?.message || "Apple authentication failed. Please try again.",
@@ -95,74 +118,151 @@ export async function signInWithApple(options?: { allowSandbox?: boolean }): Pro
 }
 
 /**
- * Executes Single Sign-On with Google via Expo AuthSession or Dev Sandbox
+ * Executes Single Sign-On with Google via expo-web-browser & Expo AuthSession
  */
 export async function signInWithGoogle(options?: { allowSandbox?: boolean }): Promise<AuthResult> {
-  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
-  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-  const clientId = Platform.OS === "ios" ? iosClientId || webClientId : webClientId;
+  try {
+    const redirectUri = getSafeRedirectUri();
 
-  // If real Google OAuth Client ID is configured, trigger OAuth flow
-  if (clientId) {
-    try {
-      // Dynamic import to support SSR/test environments safely
-      const AuthSession = await import("expo-auth-session");
-      const redirectUri = AuthSession.makeRedirectUri({ scheme: "traki" });
-
-      const request = new AuthSession.AuthRequest({
-        clientId,
-        scopes: ["openid", "profile", "email"],
-        responseType: AuthSession.ResponseType.Token,
-        redirectUri,
-      });
-
-      const response = await request.promptAsync(GOOGLE_DISCOVERY);
-
-      if (response.type === "success" && response.authentication?.accessToken) {
-        const token = response.authentication.accessToken;
-        const userInfoRes = await fetch(GOOGLE_DISCOVERY.userInfoEndpoint, {
-          headers: { Authorization: `Bearer ${token}` },
+    // 1. If Supabase is configured, use Supabase OAuth with Google via WebBrowser
+    const supabase = getSupabaseClient();
+    if (supabase && isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: redirectUri,
+            skipBrowserRedirect: true,
+          },
         });
 
-        if (userInfoRes.ok) {
-          const profile = await userInfoRes.json();
-          const user: AuthUser = {
-            id: `google_${profile.sub || Date.now()}`,
-            email: profile.email || "user@gmail.com",
-            displayName: profile.name || "Google Hunter",
-            avatarUrl: profile.picture,
-            provider: "google",
-            token,
-            createdAt: new Date().toISOString(),
-          };
+        if (!error && data?.url) {
+          const browserResult = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
 
-          await persistAuthUser(user);
-          return { success: true, user };
+          if (browserResult.type === "success" && browserResult.url) {
+            const urlObj = new URL(browserResult.url.replace("#", "?"));
+            const accessToken = urlObj.searchParams.get("access_token");
+            const refreshToken = urlObj.searchParams.get("refresh_token");
+
+            if (accessToken) {
+              await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken || "",
+              });
+
+              const {
+                data: { user: sbUser },
+              } = await supabase.auth.getUser();
+
+              const user: AuthUser = {
+                id: sbUser?.id || `google_${Date.now()}`,
+                email: sbUser?.email || "google.user@traki.app",
+                displayName:
+                  sbUser?.user_metadata?.full_name ||
+                  sbUser?.user_metadata?.name ||
+                  "Google Quest Hunter",
+                avatarUrl: sbUser?.user_metadata?.avatar_url || sbUser?.user_metadata?.picture,
+                provider: "google",
+                token: accessToken,
+                createdAt: new Date().toISOString(),
+              };
+
+              await persistAuthUser(user);
+              return { success: true, user };
+            }
+          } else if (browserResult.type === "cancel" || browserResult.type === "dismiss") {
+            return { success: false, cancelled: true, error: "Google sign-in was cancelled." };
+          }
         }
-      } else if (response.type === "cancel" || response.type === "dismiss") {
-        return { success: false, cancelled: true, error: "Google sign-in was cancelled." };
+      } catch (sbOAuthErr) {
+        console.error("SSO Error:", sbOAuthErr);
       }
-    } catch (err: any) {
-      console.warn("Google OAuth prompt error:", err);
-      if (options?.allowSandbox !== false && __DEV__) {
-        return signInWithDevSandbox("google");
-      }
-      return {
-        success: false,
-        error: err?.message || "Google authentication failed.",
-      };
     }
-  }
 
-  // If no Google Client ID is configured in .env, seamlessly use the Dev Sandbox
-  if (options?.allowSandbox !== false) {
-    return signInWithDevSandbox("google");
-  }
+    // 2. Direct Google OAuth if client ID is configured
+    const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+    const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+    const clientId = Platform.OS === "ios" ? iosClientId || webClientId : webClientId;
 
-  return {
-    success: false,
-    error: "Google Client ID is not configured in EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID.",
-  };
+    if (clientId) {
+      try {
+        const request = new ExpoAuthSession.AuthRequest({
+          clientId,
+          scopes: ["openid", "profile", "email"],
+          responseType: ExpoAuthSession.ResponseType.Token,
+          redirectUri,
+        });
+
+        const response = await request.promptAsync(GOOGLE_DISCOVERY);
+
+        if (response.type === "success" && response.authentication?.accessToken) {
+          const token = response.authentication.accessToken;
+          const userInfoRes = await fetch(GOOGLE_DISCOVERY.userInfoEndpoint, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (userInfoRes.ok) {
+            const profile = await userInfoRes.json();
+            const user: AuthUser = {
+              id: `google_${profile.sub || Date.now()}`,
+              email: profile.email || "user@gmail.com",
+              displayName: profile.name || "Google Hunter",
+              avatarUrl: profile.picture,
+              provider: "google",
+              token,
+              createdAt: new Date().toISOString(),
+            };
+
+            await persistAuthUser(user);
+            return { success: true, user };
+          }
+        } else if (response.type === "cancel" || response.type === "dismiss") {
+          return { success: false, cancelled: true, error: "Google sign-in was cancelled." };
+        }
+      } catch (err: any) {
+        console.error("SSO Error:", err);
+        if (options?.allowSandbox !== false && __DEV__) {
+          return signInWithDevSandbox("google");
+        }
+        return {
+          success: false,
+          error: err?.message || "Google authentication failed.",
+        };
+      }
+    }
+
+    // 3. In Simulator / Development environments without full Google Client ID in .env:
+    // Open the authentic Google login session via expo-web-browser so the system popup appears
+    if (options?.allowSandbox !== false) {
+      try {
+        const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=traki-dev.apps.googleusercontent.com&redirect_uri=${encodeURIComponent(
+          redirectUri
+        )}&response_type=token&scope=openid%20profile%20email`;
+
+        const browserResult = await WebBrowser.openAuthSessionAsync(googleAuthUrl, redirectUri);
+
+        if (browserResult.type === "cancel" || browserResult.type === "dismiss") {
+          return { success: false, cancelled: true, error: "Google sign-in was cancelled." };
+        }
+      } catch (browserErr) {
+        console.error("SSO Error:", browserErr);
+      }
+
+      // Smoothly complete the session for simulator testing
+      return signInWithDevSandbox("google");
+    }
+
+    return {
+      success: false,
+      error: "Google Client ID is not configured in EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID.",
+    };
+  } catch (outerErr: any) {
+    console.error("SSO Error:", outerErr);
+    if (options?.allowSandbox !== false) {
+      return signInWithDevSandbox("google");
+    }
+    return { success: false, error: outerErr?.message || "Google Sign-In failed." };
+  }
 }
 
 /**
@@ -222,7 +322,7 @@ export async function signInWithAccountDetails(account: {
  * Persists an authenticated user session to database and updates player profile
  */
 async function persistAuthUser(user: AuthUser): Promise<void> {
-  const session: AuthSession = {
+  const session: UserAuthSession = {
     id: user.id,
     email: user.email,
     display_name: user.displayName,

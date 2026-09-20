@@ -7,6 +7,11 @@
     "icon": "./assets/images/logos/traki-logo.png",
     "scheme": "traki",
     "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.traki.app",
+      "usesAppleSignIn": true
+    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -21,6 +26,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-apple-authentication",
       [
         "expo-splash-screen",
         {
