@@ -123,7 +123,15 @@ export default function PartnerCard({
   const isJoinCodeValid = isValidPartnerCode(joinCode);
 
   const handleJoinPartner = async () => {
-    if (!isJoinCodeValid || isJoining) return;
+    if (!isJoinCodeValid) {
+      setFeedbackMsg({
+        type: "error",
+        text: "Please enter a valid 4-digit code first.",
+      });
+      inputRef.current?.focus();
+      return;
+    }
+    if (isJoining) return;
     setIsJoining(true);
     setFeedbackMsg(null);
     try {
@@ -460,11 +468,11 @@ export default function PartnerCard({
           {/* Join CTA Button */}
           <Pressable
             onPress={handleJoinPartner}
-            disabled={!isJoinCodeValid || isJoining}
+            disabled={isJoining}
             className={`h-[44px] w-full rounded-xl items-center justify-center mt-3 shadow-xs ${
               isJoinCodeValid && !isJoining
                 ? "bg-[#AF2219] active:bg-[#8F1E2C]"
-                : "bg-stone-200 opacity-60"
+                : "bg-stone-200"
             }`}
           >
             {isJoining ? (

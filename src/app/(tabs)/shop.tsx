@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ScrollView, Text, View, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
@@ -42,6 +43,7 @@ const ITEMS: ShopItem[] = [
 ];
 
 export default function ShopScreen() {
+  const router = useRouter();
   const { profile, buyShopItem } = useTraki();
   const [toastMsg, setToastMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -185,6 +187,22 @@ export default function ShopScreen() {
               </View>
             );
           })}
+        </View>
+
+        {/* Battle Arena CTA banner for gold farming */}
+        <View className="bg-[#AF221908] border border-[#AF221920] rounded-2xl p-4 flex-row items-center justify-between shadow-2xs mb-5">
+          <View className="flex-1 pr-3">
+            <Text className="text-xs font-black text-stone-900">Need More Gold?</Text>
+            <Text className="text-[11px] text-stone-500 font-medium mt-0.5">
+              Defeat daily mobs and log expenses in the Battle Arena to earn bounties!
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => router.push("/(tabs)")}
+            className="px-3.5 py-2 rounded-xl bg-[#AF2219] items-center justify-center active:bg-[#8F1E2C]"
+          >
+            <Text className="text-xs font-bold text-white">Battle Now</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </ScreenContainer>

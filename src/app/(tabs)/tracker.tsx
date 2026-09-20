@@ -289,12 +289,39 @@ export default function TrackerScreen() {
 
         <View className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-2xs">
           {filteredTransactions.length === 0 ? (
-            <View className="p-8 items-center justify-center">
-              <Text className="text-xs font-bold text-stone-400">
+            <View className="p-8 items-center justify-center gap-2">
+              <Text className="text-xs font-bold text-stone-400 text-center">
                 {wallets.length === 0
                   ? "Create a wallet to start logging transactions."
-                  : "No transactions recorded yet. Tap + to log one!"}
+                  : categories.length === 0
+                  ? "Set up budget categories to start logging."
+                  : "No transactions recorded yet."}
               </Text>
+              {wallets.length === 0 ? (
+                <Pressable
+                  onPress={() => setShowAddWallet(true)}
+                  className="mt-2 px-4 py-2 rounded-xl bg-[#AF2219] active:bg-[#8F1E2C] flex-row items-center gap-1.5 shadow-xs"
+                >
+                  <MaterialIcons name="add" size={14} color="#FFFFFF" />
+                  <Text className="text-xs font-bold text-white">Create First Wallet</Text>
+                </Pressable>
+              ) : categories.length === 0 ? (
+                <Pressable
+                  onPress={handleQuickAddCategories}
+                  className="mt-2 px-4 py-2 rounded-xl bg-[#AF2219] active:bg-[#8F1E2C] flex-row items-center gap-1.5 shadow-xs"
+                >
+                  <MaterialIcons name="category" size={14} color="#FFFFFF" />
+                  <Text className="text-xs font-bold text-white">Setup Categories</Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  onPress={() => router.push("/quick-log")}
+                  className="mt-2 px-4 py-2 rounded-xl bg-[#AF221915] border border-[#AF221940] active:bg-[#AF221925] flex-row items-center gap-1.5"
+                >
+                  <MaterialIcons name="flash-on" size={14} color="#AF2219" />
+                  <Text className="text-xs font-bold text-[#AF2219]">Quick Log Expense</Text>
+                </Pressable>
+              )}
             </View>
           ) : (
             filteredTransactions.map((tx, idx) => {

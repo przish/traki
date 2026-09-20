@@ -340,14 +340,13 @@ export default function VaultScreen() {
 
                         <Pressable
                           onPress={() => handleUnlock(g.id)}
-                          disabled={!canUnlock}
                           className={`px-3 py-1 rounded-lg ${canUnlock
                             ? "bg-[#AF2219] shadow-xs active:bg-[#8F1E2C]"
-                            : "bg-stone-200 opacity-60"
+                            : "bg-[#AF221915] border border-[#AF221930] active:bg-[#AF221925]"
                             }`}
                         >
                           <Text
-                            className={`text-[11px] font-bold ${canUnlock ? "text-white" : "text-stone-400"
+                            className={`text-[11px] font-bold ${canUnlock ? "text-white" : "text-[#AF2219]"
                               }`}
                           >
                             Unlock
