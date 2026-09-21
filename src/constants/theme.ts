@@ -38,6 +38,13 @@ export const THEME_CONFIG = {
       CREDIT: "#F59E0B",
       SAVINGS: "#8B5CF6",
     },
+
+    // Boss Encounter Tier Accents
+    TIER: {
+      DAILY: "#AF2219",
+      WEEKLY: "#7C3AED",
+      MONTHLY: "#D97706",
+    },
   },
 
   TAB_BAR: {
