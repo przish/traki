@@ -22,7 +22,7 @@ import { isValidNonEmptyText } from "@/src/constants";
 
 export default function Login() {
   const router = useRouter();
-  const { error: contextError, clearError } = useAuth();
+  const { signInWithEmailPassword, error: contextError, clearError } = useAuth();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,7 +36,7 @@ export default function Login() {
     setShowPassword(!showPassword);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!isFormValid || isLoading) return;
     setLocalError(null);
     clearError();
@@ -45,10 +45,14 @@ export default function Login() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {}
 
-    setTimeout(() => {
-      setIsLoading(false);
+    const result = await signInWithEmailPassword(identifier, password);
+    setIsLoading(false);
+
+    if (result.success) {
       router.replace("/(tabs)");
-    }, 400);
+    } else if (result.error) {
+      setLocalError(result.error);
+    }
   };
 
   return (

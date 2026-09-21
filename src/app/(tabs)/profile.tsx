@@ -48,8 +48,8 @@ export default function ProfileScreen() {
         return "Google SSO";
       case "apple":
         return "Apple SSO";
-      case "stingray":
-        return "Stingray SSO";
+      case "email":
+        return "Email Account";
       default:
         return "Authenticated";
     }

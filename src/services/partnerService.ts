@@ -82,7 +82,7 @@ export const PartnerService = {
       const cleanCode = code.trim();
 
       if (!user) {
-        // Fallback for local/sandbox demo users: pair locally
+        // Fallback for offline/local storage users: pair locally
         const partnerName = "Hunter Duo";
         await TrakiStorage.updateProfile({ partner_name: partnerName, partner_id: `partner_${cleanCode}`, partner_streak: 1 });
         return { success: true, partnerName };

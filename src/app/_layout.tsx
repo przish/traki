@@ -1,14 +1,14 @@
 import "@/global.css";
-import React from "react";
+import React, { useEffect } from "react";
 import * as WebBrowser from "expo-web-browser";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { AuthProvider } from "@/src/context/AuthContext";
+import { AuthProvider, useAuth } from "@/src/context/AuthContext";
 import { TrakiProvider } from "@/src/context/TrakiContext";
 import { useFonts } from "expo-font";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -17,6 +17,39 @@ import { useColors } from "@/hooks/use-colors";
 
 // Complete any pending auth session redirect at the module root
 WebBrowser.maybeCompleteAuthSession();
+
+// Auth-aware route guard — runs inside AuthProvider so it can read auth state.
+// Automatically routes authenticated users straight into /(tabs) upon app launch,
+// preventing repeated login/signup prompts when the app is exited and reopened.
+function AuthGuard() {
+  const { user, isLoading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Don't do anything until the initial session check has resolved.
+    if (isLoading) return;
+
+    const inTabsGroup = segments[0] === "(tabs)";
+    const inPreAuthScreen =
+      !segments[0] ||
+      (segments[0] as string) === "index" ||
+      segments[0] === "login" ||
+      segments[0] === "signUp" ||
+      segments[0] === "passCreate" ||
+      segments[0] === "resetPassword";
+
+    if (!user && inTabsGroup) {
+      // User is NOT logged in but is inside tabs — kick them to login.
+      router.replace("/login");
+    } else if (user && inPreAuthScreen) {
+      // User IS logged in — automatically take them straight to app without login/signup prompt.
+      router.replace("/(tabs)");
+    }
+  }, [user, isLoading, segments, router]);
+
+  return null;
+}
 
 function AppShell() {
   const colors = useColors();
@@ -48,6 +81,7 @@ function AppShell() {
           overflow: "hidden",
         }}
       >
+        <AuthGuard />
         <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="login" />

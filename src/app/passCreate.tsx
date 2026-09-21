@@ -7,7 +7,7 @@ import {
   Platform,
   Pressable,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import TextField from "../../components/text-field";
@@ -16,19 +16,24 @@ import Continue from "../../components/continue";
 import BackButton from "../../components/back-button";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { isValidPassword, doPasswordsMatch } from "@/src/constants";
+import { useAuth } from "@/src/context/AuthContext";
 
 export default function PassCreate() {
   const router = useRouter();
+  const { email } = useLocalSearchParams<{ email?: string }>();
+  const { signUpWithEmail } = useAuth();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const isPasswordValid = isValidPassword(password);
   const doMatch = doPasswordsMatch(password, confirmPassword);
   const canSubmit = isPasswordValid && doMatch;
 
   const getValidationHint = () => {
+    if (authError) return authError;
     if (password.length > 0 && !isPasswordValid) {
       return "Password must be at least 6 characters";
     }
@@ -40,17 +45,23 @@ export default function PassCreate() {
 
   const errorText = getValidationHint();
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     if (!canSubmit || isLoading) return;
     setIsLoading(true);
+    setAuthError(null);
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {}
 
-    setTimeout(() => {
-      setIsLoading(false);
+    const targetEmail = (email && email.trim()) || "hero@traki.app";
+    const result = await signUpWithEmail(targetEmail, password);
+    setIsLoading(false);
+
+    if (result.success) {
       router.replace("/(tabs)");
-    }, 400);
+    } else if (result.error) {
+      setAuthError(result.error);
+    }
   };
 
   return (
