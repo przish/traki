@@ -13,6 +13,7 @@ import { TrakiStorage } from "../services/db";
 import { calculateCombatStrike } from "../services/combatEngine";
 import { evaluateStreakOnAction, parseToCents } from "../services/economyService";
 import { SupabaseSyncService } from "../services/supabaseSync";
+import { CombatEventBus } from "../services/combatEvents";
 
 interface TrakiContextType {
   wallets: Wallet[];
@@ -143,7 +144,7 @@ export function TrakiProvider({ children }: { children: React.ReactNode }) {
 
     await loadAll();
 
-    return {
+    const combatResult: CombatStrikeResult = {
       baseDamage: strike.baseDamage,
       isCrit: strike.isCrit,
       critMultiplier: strike.critMultiplier,
@@ -157,6 +158,17 @@ export function TrakiProvider({ children }: { children: React.ReactNode }) {
       expEarned,
       defeatedBosses: [],
     };
+
+    // Emit event to 2D Battle Arena Stage via Event Bus
+    CombatEventBus.emitCombatStrike({
+      id: newTx.id,
+      amount: amountInCents / 100,
+      label: note,
+      strikeResult: combatResult,
+      timestamp: Date.now(),
+    });
+
+    return combatResult;
   }, [transactions, profile, loadAll]);
 
   const addWallet = useCallback(async (walletData: Omit<Wallet, "id">) => {
