@@ -36,7 +36,7 @@ export default function SignUp() {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch {}
-    router.push("/passCreate");
+    router.push({ pathname: "/passCreate", params: { email: email.trim() } });
   };
 
   return (

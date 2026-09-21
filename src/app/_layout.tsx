@@ -19,8 +19,8 @@ import { useColors } from "@/hooks/use-colors";
 WebBrowser.maybeCompleteAuthSession();
 
 // Auth-aware route guard — runs inside AuthProvider so it can read auth state.
-// Redirects unauthenticated users to /login, and authenticated users away from
-// pre-auth screens, without ever leaving a dead-end blank screen.
+// Automatically routes authenticated users straight into /(tabs) upon app launch,
+// preventing repeated login/signup prompts when the app is exited and reopened.
 function AuthGuard() {
   const { user, isLoading } = useAuth();
   const segments = useSegments();
@@ -31,19 +31,19 @@ function AuthGuard() {
     if (isLoading) return;
 
     const inTabsGroup = segments[0] === "(tabs)";
-    const inAuthScreen =
+    const inPreAuthScreen =
+      !segments[0] ||
+      (segments[0] as string) === "index" ||
       segments[0] === "login" ||
       segments[0] === "signUp" ||
       segments[0] === "passCreate" ||
-      segments[0] === "resetPassword" ||
-      segments[0] === undefined ||          // root index splash
-      segments[0] === "index";
+      segments[0] === "resetPassword";
 
     if (!user && inTabsGroup) {
       // User is NOT logged in but is inside tabs — kick them to login.
       router.replace("/login");
-    } else if (user && inAuthScreen) {
-      // User IS logged in but is still on a pre-auth screen — skip to app.
+    } else if (user && inPreAuthScreen) {
+      // User IS logged in — automatically take them straight to app without login/signup prompt.
       router.replace("/(tabs)");
     }
   }, [user, isLoading, segments, router]);

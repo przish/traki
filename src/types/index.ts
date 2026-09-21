@@ -89,7 +89,7 @@ export interface CombatStrikeResult {
   defeatedBosses: BossTier[];
 }
 
-export type AuthProviderType = "google" | "apple" | "stingray" | "email" | "guest";
+export type AuthProviderType = "google" | "apple" | "email" | "guest";
 
 export interface AuthUser {
   id: string;

@@ -6,6 +6,7 @@ import {
   TextInput,
   Share,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Haptics from "expo-haptics";
@@ -168,14 +169,32 @@ export default function PartnerCard({
     setTimeout(() => setPoked(false), 2500);
   };
 
-  const handleUnlink = async () => {
+  const executeUnlink = async () => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     } catch {}
     await PartnerService.unlinkPartner();
     await refreshData();
+    setPartnerCode(null);
+    setCodeExpiresAt(null);
+    setJoinCode("");
     setFeedbackMsg({ type: "success", text: "Partner unlinked." });
     setTimeout(() => setFeedbackMsg(null), 3000);
+  };
+
+  const handleUnlink = () => {
+    Alert.alert(
+      "Unlink Partner",
+      "Are you sure you want to unlink your Duo partner? You can pair again anytime with a new 4-digit code.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Unlink",
+          style: "destructive",
+          onPress: executeUnlink,
+        },
+      ]
+    );
   };
 
   const isDark = useColorScheme() === "dark";
@@ -183,7 +202,7 @@ export default function PartnerCard({
   // ==========================================
   // 1. BOUND PARTNER STATE (Already Linked)
   // ==========================================
-  if (profile?.partner_name) {
+  if (profile?.partner_name && profile.partner_name.trim() !== "") {
     return (
       <View
         className={`rounded-2xl p-4 border shadow-2xs ${

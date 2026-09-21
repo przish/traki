@@ -228,7 +228,15 @@ export const TrakiStorage = {
     const db = await getDatabase();
     if (!db) return memoryStore.profile;
     const row = await db.getFirstAsync("SELECT * FROM player_profile LIMIT 1");
-    return (row as PlayerProfile) || memoryStore.profile;
+    if (!row) return memoryStore.profile;
+    const profile = row as PlayerProfile;
+    // Normalize SQLite NULLs to undefined for clean TS consumption
+    return {
+      ...profile,
+      partner_id: profile.partner_id || undefined,
+      partner_name: profile.partner_name || undefined,
+      partner_streak: profile.partner_streak ?? 0,
+    };
   },
 
   getBosses: async (): Promise<BossEncounter[]> => {
