@@ -37,16 +37,16 @@ import {
   SavingsGoal,
   AuthSession,
 } from "../types";
-import { STARTER_PLAYER_PROFILE, createDefaultBossEncounters } from "../constants";
+import { STARTER_PLAYER_PROFILE, createDefaultBossEncounters, ECONOMY_CONFIG } from "../constants";
 
 let dbInstance: any = null;
 const DATABASE_NAME = "traki.db";
 
-// In-memory fallback for web environment — starts EMPTY (no mock data)
+// In-memory fallback for web environment — starts with default categories & vault
 const memoryStore = {
   authSession: null as AuthSession | null,
-  wallets: [] as Wallet[],
-  categories: [] as Category[],
+  wallets: [{ ...ECONOMY_CONFIG.DEFAULT_WALLET }] as Wallet[],
+  categories: [...ECONOMY_CONFIG.DEFAULT_CATEGORIES] as Category[],
   transactions: [] as Transaction[],
   profile: { ...STARTER_PLAYER_PROFILE } as PlayerProfile,
   bosses: [] as BossEncounter[],
@@ -198,6 +198,27 @@ async function initializeDatabase(db: any) {
       );
     }
   }
+
+  // Seed default categories if none exist
+  const catRow = await db.getFirstAsync("SELECT id FROM categories LIMIT 1");
+  if (!catRow) {
+    for (const c of ECONOMY_CONFIG.DEFAULT_CATEGORIES) {
+      await db.runAsync(
+        `INSERT OR IGNORE INTO categories (id, name, icon, budget_cap, color) VALUES (?, ?, ?, ?, ?)`,
+        [c.id, c.name, c.icon, c.budget_cap ?? null, c.color]
+      );
+    }
+  }
+
+  // Seed default hero savings vault wallet if none exists
+  const walletRow = await db.getFirstAsync("SELECT id FROM wallets LIMIT 1");
+  if (!walletRow) {
+    const w = ECONOMY_CONFIG.DEFAULT_WALLET;
+    await db.runAsync(
+      `INSERT OR IGNORE INTO wallets (id, name, type, balance, currency, color) VALUES (?, ?, ?, ?, ?, ?)`,
+      [w.id, w.name, w.type, w.balance, w.currency, w.color]
+    );
+  }
 }
 
 export const TrakiStorage = {
@@ -277,12 +298,12 @@ export const TrakiStorage = {
 
   // ─── WRITE OPERATIONS ──────────────────────────────────────────────
 
-  saveTransaction: async (tx: Transaction, walletDeduction: number): Promise<void> => {
+  saveTransaction: async (tx: Transaction, savingsAmount: number): Promise<void> => {
     const db = await getDatabase();
     if (!db) {
       memoryStore.transactions.unshift(tx);
       const w = memoryStore.wallets.find((x) => x.id === tx.wallet_id);
-      if (w) w.balance -= walletDeduction;
+      if (w) w.balance += savingsAmount;
       return;
     }
 
@@ -294,8 +315,8 @@ export const TrakiStorage = {
       );
 
       await db.runAsync(
-        `UPDATE wallets SET balance = balance - ? WHERE id = ?`,
-        [walletDeduction, tx.wallet_id]
+        `UPDATE wallets SET balance = balance + ? WHERE id = ?`,
+        [savingsAmount, tx.wallet_id]
       );
     });
   },

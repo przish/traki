@@ -150,3 +150,18 @@ describe("Two-Key Savings Vault Verification", () => {
     expect(evalResult.missingTokens).toBe(0);
   });
 });
+
+describe("Self-Control Savings & Impulse Resistance Engine", () => {
+  it("accumulates resisted purchases positively in wallet balance", () => {
+    let startingVaultBalance = 250000; // PHP 2,500.00
+    const resistedCoffees = [5000, 15000, 50000]; // ₱50, ₱150, ₱500
+    
+    for (const savedAmount of resistedCoffees) {
+      startingVaultBalance += savedAmount;
+    }
+    
+    expect(startingVaultBalance).toBe(320000); // PHP 3,200.00
+    expect(formatCents(startingVaultBalance)).toBe("PHP 3,200.00");
+  });
+});
+

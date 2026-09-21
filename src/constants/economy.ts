@@ -29,4 +29,22 @@ export const ECONOMY_CONFIG = {
     MS_PER_HOUR: 60 * 60 * 1000,
     MS_PER_DAY: 24 * 60 * 60 * 1000,
   } as const,
+
+  // Starter self-control savings categories
+  DEFAULT_CATEGORIES: [
+    { id: "c_coffee", name: "Coffee & Drinks", icon: "local-cafe", color: "#AF2219", budget_cap: null },
+    { id: "c_dining", name: "Takeout & Fast Food", icon: "restaurant", color: "#F59E0B", budget_cap: null },
+    { id: "c_shopping", name: "Impulse Shopping", icon: "shopping-bag", color: "#8B5CF6", budget_cap: null },
+    { id: "c_subscriptions", name: "Subscriptions & Games", icon: "subscriptions", color: "#3B82F6", budget_cap: null },
+    { id: "c_delivery", name: "Rides & Delivery", icon: "delivery-dining", color: "#10B981", budget_cap: null },
+  ] as const,
+
+  DEFAULT_WALLET: {
+    id: "w_hero_vault",
+    name: "Hero Savings Vault",
+    type: "savings" as const,
+    balance: 0,
+    currency: "PHP",
+    color: "#AF2219",
+  },
 } as const;

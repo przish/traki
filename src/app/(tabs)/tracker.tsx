@@ -6,22 +6,15 @@ import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useTraki } from "@/src/context/TrakiContext";
 import { formatCents } from "@/src/services/economyService";
-import { isValidNonEmptyText } from "@/src/constants";
+import { isValidNonEmptyText, ECONOMY_CONFIG } from "@/src/constants";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
-const WALLET_COLORS = ["#3C9B55", "#2B6CB0", "#D92C3B", "#F1B64A", "#AF2219", "#8B5CF6"];
+const WALLET_COLORS = ["#AF2219", "#3C9B55", "#2B6CB0", "#D92C3B", "#F1B64A", "#8B5CF6"];
 const WALLET_TYPES: { label: string; value: "cash" | "bank" | "credit" | "savings" }[] = [
+  { label: "Vault", value: "savings" },
   { label: "Cash", value: "cash" },
   { label: "Bank", value: "bank" },
   { label: "Credit", value: "credit" },
-  { label: "Savings", value: "savings" },
-];
-
-const DEFAULT_CATEGORIES = [
-  { name: "Food & Dining", icon: "restaurant", color: "#F4D5CB" },
-  { name: "Transport", icon: "directions-car", color: "#DCE8F0" },
-  { name: "Bills & Utilities", icon: "lightbulb", color: "#FFF1D7" },
-  { name: "Shopping", icon: "shopping-bag", color: "#EAE5F4" },
 ];
 
 export default function TrackerScreen() {
@@ -30,10 +23,10 @@ export default function TrackerScreen() {
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
   const [showAddWallet, setShowAddWallet] = useState(false);
   const [newWalletName, setNewWalletName] = useState("");
-  const [newWalletType, setNewWalletType] = useState<"cash" | "bank" | "credit" | "savings">("cash");
+  const [newWalletType, setNewWalletType] = useState<"cash" | "bank" | "credit" | "savings">("savings");
   const [newWalletColor, setNewWalletColor] = useState(WALLET_COLORS[0]);
 
-  const netWorthCents = wallets.reduce((sum, w) => sum + w.balance, 0);
+  const totalSavedCents = wallets.reduce((sum, w) => sum + Math.max(0, w.balance), 0);
 
   const filteredTransactions = selectedWalletId
     ? transactions.filter((t) => t.wallet_id === selectedWalletId)
@@ -57,7 +50,7 @@ export default function TrackerScreen() {
 
   const handleQuickAddCategories = async () => {
     try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch { }
-    for (const cat of DEFAULT_CATEGORIES) {
+    for (const cat of ECONOMY_CONFIG.DEFAULT_CATEGORIES) {
       await addCategory({ name: cat.name, icon: cat.icon, budget_cap: 500000, color: cat.color });
     }
   };
@@ -65,14 +58,14 @@ export default function TrackerScreen() {
   return (
     <ScreenContainer className="px-4 pt-2">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        {/* Header with Net Worth */}
+        {/* Header with Total Savings Vault */}
         <View className="flex-row items-center justify-between py-3 mb-2">
           <View>
             <Text className="text-[10px] font-black uppercase tracking-widest text-[#AF2219]">
-              Total Net Worth
+              Total Savings Vault
             </Text>
             <Text className={`text-2xl font-black tabular-nums tracking-tight ${isDark ? "text-white" : "text-stone-900"}`}>
-              {wallets.length > 0 ? formatCents(netWorthCents) : "PHP 0.00"}
+              {wallets.length > 0 ? formatCents(totalSavedCents) : "PHP 0.00"}
             </Text>
           </View>
           {wallets.length > 0 && categories.length > 0 && (
@@ -85,10 +78,10 @@ export default function TrackerScreen() {
           )}
         </View>
 
-        {/* Wallets Section */}
+        {/* Savings Vaults Section */}
         <View className="flex-row items-center justify-between mb-2.5">
           <Text className={`text-xs font-black uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
-            Accounts & Wallets
+            Savings Vaults & Buckets
           </Text>
           <View className="flex-row items-center gap-2">
             {selectedWalletId && (
@@ -99,7 +92,7 @@ export default function TrackerScreen() {
             {wallets.length > 0 && (
               <Pressable onPress={() => setShowAddWallet(!showAddWallet)}>
                 <Text className="text-xs font-bold text-[#AF2219]">
-                  {showAddWallet ? "Cancel" : "+ Add"}
+                  {showAddWallet ? "Cancel" : "+ Add Vault"}
                 </Text>
               </Pressable>
             )}
@@ -110,19 +103,19 @@ export default function TrackerScreen() {
         {wallets.length === 0 && !showAddWallet ? (
           <View className={`rounded-2xl p-6 border mb-5 items-center shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"}`}>
             <View className="h-16 w-16 rounded-2xl bg-[#AF221915] border-2 border-[#AF221930] items-center justify-center mb-3">
-              <MaterialIcons name="account-balance-wallet" size={32} color="#AF2219" />
+              <MaterialIcons name="savings" size={32} color="#AF2219" />
             </View>
             <Text className={`text-base font-black text-center mb-1 ${isDark ? "text-white" : "text-stone-900"}`}>
-              Create Your First Wallet
+              Create Your First Savings Vault
             </Text>
             <Text className={`text-xs font-medium text-center leading-relaxed mb-4 ${isDark ? "text-stone-400" : "text-stone-500"}`}>
-              Add a wallet to start tracking your spending{"\n"}and dealing damage to bosses!
+              Store your resisted impulse money and watch{"\n"}your savings accumulate with every battle!
             </Text>
             <Pressable
               onPress={() => setShowAddWallet(true)}
               className="h-[44px] px-6 rounded-xl bg-[#AF2219] items-center justify-center active:bg-[#8F1E2C] shadow-xs"
             >
-              <Text className="text-white font-bold text-sm">+ Create Wallet</Text>
+              <Text className="text-white font-bold text-sm">+ Create Vault</Text>
             </Pressable>
           </View>
         ) : (
@@ -146,10 +139,9 @@ export default function TrackerScreen() {
                     />
                   </View>
                   <Text
-                    className={`text-base font-black tabular-nums ${w.balance < 0 ? "text-[#AF2219]" : (isDark ? "text-white" : "text-stone-900")
-                      }`}
+                    className={`text-base font-black tabular-nums text-emerald-600 ${isDark ? "text-emerald-400" : ""}`}
                   >
-                    {formatCents(w.balance)}
+                    +{formatCents(Math.max(0, w.balance))}
                   </Text>
                   {isSelected && (
                     <Text className="text-[10px] font-bold text-[#AF2219] mt-1">
@@ -166,12 +158,12 @@ export default function TrackerScreen() {
         {showAddWallet && (
           <View className={`rounded-2xl p-4 border mb-5 shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#AF221950]" : "bg-white border-[#AF221930]"}`}>
             <Text className={`text-xs font-black uppercase tracking-wider mb-3 ${isDark ? "text-stone-300" : "text-stone-600"}`}>
-              New Wallet
+              New Savings Vault
             </Text>
             <TextInput
               value={newWalletName}
               onChangeText={setNewWalletName}
-              placeholder="Wallet name (e.g. Daily Cash)"
+              placeholder="Vault name (e.g. Dream Trip Vault)"
               placeholderTextColor={isDark ? "#707579" : "#8B8988"}
               className={`h-[44px] px-3 rounded-xl border text-sm font-medium mb-3 ${isDark ? "border-[#303336] bg-[#101112] text-white" : "border-stone-200 bg-[#FAF8F6] text-stone-900"}`}
             />
@@ -212,45 +204,43 @@ export default function TrackerScreen() {
                 }`}
             >
               <Text className={`font-bold text-sm ${isWalletValid ? "text-white" : (isDark ? "text-stone-500" : "text-stone-400")}`}>
-                Create Wallet
+                Create Savings Vault
               </Text>
             </Pressable>
           </View>
         )}
 
-        {/* Category Budget Status */}
+        {/* Temptations Resisted by Category */}
         <View className="flex-row items-center justify-between mb-2.5">
           <Text className={`text-xs font-black uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
-            Monthly Budgets
+            Temptation Defense Categories
           </Text>
         </View>
 
         {categories.length === 0 ? (
           <View className={`rounded-2xl p-6 border mb-5 items-center shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"}`}>
             <View className="h-14 w-14 rounded-2xl bg-[#AF221915] border border-[#AF221930] items-center justify-center mb-3">
-              <MaterialIcons name="category" size={28} color="#AF2219" />
+              <MaterialIcons name="shield" size={28} color="#AF2219" />
             </View>
             <Text className={`text-sm font-black text-center mb-1 ${isDark ? "text-white" : "text-stone-900"}`}>
-              Set Up Budget Categories
+              Set Up Self-Control Categories
             </Text>
             <Text className={`text-xs font-medium text-center leading-relaxed mb-4 ${isDark ? "text-stone-400" : "text-stone-500"}`}>
-              Categories help you track spending habits{"\n"}and fight bosses more effectively.
+              Categories categorize the impulse temptations you conquer.
             </Text>
             <Pressable
               onPress={handleQuickAddCategories}
               className="h-[44px] px-6 rounded-xl bg-[#AF2219] items-center justify-center active:bg-[#8F1E2C] shadow-xs"
             >
-              <Text className="text-white font-bold text-sm">+ Quick Setup (4 Categories)</Text>
+              <Text className="text-white font-bold text-sm">+ Quick Setup (Default Categories)</Text>
             </Pressable>
           </View>
         ) : (
           <View className={`rounded-2xl p-4 border mb-5 shadow-2xs ${isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-stone-200"}`}>
             {categories.map((c) => {
-              const spentCents = transactions
+              const savedCents = transactions
                 .filter((t) => t.category_id === c.id)
                 .reduce((sum, t) => sum + t.amount, 0);
-              const cap = c.budget_cap ?? 500000;
-              const progress = Math.min(100, Math.round((spentCents / cap) * 100));
 
               return (
                 <View key={c.id} className="mb-3 last:mb-0">
@@ -259,19 +249,9 @@ export default function TrackerScreen() {
                       <MaterialIcons name={c.icon as any} size={16} color="#AF2219" />
                       <Text className={`text-xs font-bold ${isDark ? "text-stone-200" : "text-stone-800"}`}>{c.name}</Text>
                     </View>
-                    <Text className={`text-xs font-black tabular-nums ${isDark ? "text-stone-200" : "text-stone-800"}`}>
-                      {formatCents(spentCents)} / {formatCents(cap)}
+                    <Text className="text-xs font-black tabular-nums text-emerald-600">
+                      +{formatCents(savedCents)} Saved
                     </Text>
-                  </View>
-                  <View className={`h-2 w-full rounded-full overflow-hidden ${isDark ? "bg-stone-800" : "bg-stone-100"}`}>
-                    <View
-                      style={{
-                        width: `${progress}%`,
-                        backgroundColor: progress > 85 ? "#AF2219" : "#3C9B55",
-                        height: "100%",
-                        borderRadius: 999,
-                      }}
-                    />
                   </View>
                 </View>
               );
@@ -279,13 +259,13 @@ export default function TrackerScreen() {
           </View>
         )}
 
-        {/* Transaction History */}
+        {/* Savings Victory History */}
         <View className="flex-row items-center justify-between mb-2.5">
           <Text className={`text-xs font-black uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
-            Recent Ledger Entries
+            Recent Self-Control Victories
           </Text>
           <Text className="text-xs font-bold text-stone-400">
-            {filteredTransactions.length} logs
+            {filteredTransactions.length} strikes
           </Text>
         </View>
 
@@ -293,37 +273,15 @@ export default function TrackerScreen() {
           {filteredTransactions.length === 0 ? (
             <View className="p-8 items-center justify-center gap-2">
               <Text className="text-xs font-bold text-stone-400 text-center">
-                {wallets.length === 0
-                  ? "Create a wallet to start logging transactions."
-                  : categories.length === 0
-                  ? "Set up budget categories to start logging."
-                  : "No transactions recorded yet."}
+                No savings logged yet. Strike the impulse mobs to build your vault!
               </Text>
-              {wallets.length === 0 ? (
-                <Pressable
-                  onPress={() => setShowAddWallet(true)}
-                  className="mt-2 px-4 py-2 rounded-xl bg-[#AF2219] active:bg-[#8F1E2C] flex-row items-center gap-1.5 shadow-xs"
-                >
-                  <MaterialIcons name="add" size={14} color="#FFFFFF" />
-                  <Text className="text-xs font-bold text-white">Create First Wallet</Text>
-                </Pressable>
-              ) : categories.length === 0 ? (
-                <Pressable
-                  onPress={handleQuickAddCategories}
-                  className="mt-2 px-4 py-2 rounded-xl bg-[#AF2219] active:bg-[#8F1E2C] flex-row items-center gap-1.5 shadow-xs"
-                >
-                  <MaterialIcons name="category" size={14} color="#FFFFFF" />
-                  <Text className="text-xs font-bold text-white">Setup Categories</Text>
-                </Pressable>
-              ) : (
-                <Pressable
-                  onPress={() => router.push("/quick-log")}
-                  className="mt-2 px-4 py-2 rounded-xl bg-[#AF221915] border border-[#AF221940] active:bg-[#AF221925] flex-row items-center gap-1.5"
-                >
-                  <MaterialIcons name="flash-on" size={14} color="#AF2219" />
-                  <Text className="text-xs font-bold text-[#AF2219]">Quick Log Expense</Text>
-                </Pressable>
-              )}
+              <Pressable
+                onPress={() => router.push("/quick-log")}
+                className="mt-2 px-4 py-2 rounded-xl bg-[#AF221915] border border-[#AF221940] active:bg-[#AF221925] flex-row items-center gap-1.5"
+              >
+                <MaterialIcons name="flash-on" size={14} color="#AF2219" />
+                <Text className="text-xs font-bold text-[#AF2219]">Log First Resisted Buy</Text>
+              </Pressable>
             </View>
           ) : (
             filteredTransactions.map((tx, idx) => {
@@ -341,20 +299,20 @@ export default function TrackerScreen() {
                     }`}
                 >
                   <View className="flex-row items-center gap-3">
-                    <View className="h-9 w-9 rounded-xl bg-[#AF221915] border border-[#AF221930] items-center justify-center">
+                    <View className="h-9 w-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 items-center justify-center">
                       <MaterialIcons
-                        name={(cat?.icon ?? "receipt") as any}
+                        name={(cat?.icon ?? "shield") as any}
                         size={18}
-                        color="#AF2219"
+                        color="#10B981"
                       />
                     </View>
                     <View>
-                      <Text className={`text-xs font-bold ${isDark ? "text-stone-200" : "text-stone-800"}`}>{tx.note || cat?.name || "Expense"}</Text>
+                      <Text className={`text-xs font-bold ${isDark ? "text-stone-200" : "text-stone-800"}`}>{tx.note || cat?.name || "Resisted Buy"}</Text>
                       <Text className="text-[10px] text-stone-400 font-medium">{dateStr}</Text>
                     </View>
                   </View>
-                  <Text className="text-sm font-black text-[#AF2219] tabular-nums">
-                    -{formatCents(tx.amount)}
+                  <Text className="text-sm font-black text-emerald-600 tabular-nums">
+                    +{formatCents(tx.amount)}
                   </Text>
                 </View>
               );

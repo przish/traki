@@ -13,9 +13,8 @@ export default function QuickLogModal() {
   const { wallets, categories, logTransaction } = useTraki();
 
   const [amountStr, setAmountStr] = useState("0");
-  const [selectedWalletId, setSelectedWalletId] = useState(wallets[0]?.id ?? "w_cash");
-  const [selectedCatId, setSelectedCatId] = useState(categories[0]?.id ?? "c_food");
-  const [note] = useState("Quick Expense");
+  const [selectedWalletId, setSelectedWalletId] = useState(wallets[0]?.id ?? "w_hero_vault");
+  const [selectedCatId, setSelectedCatId] = useState(categories[0]?.id ?? "c_coffee");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleClose = () => {
@@ -51,7 +50,10 @@ export default function QuickLogModal() {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     } catch {}
 
-    await logTransaction(amountStr, selectedCatId, selectedWalletId, note);
+    const selectedCategory = categories.find((c) => c.id === selectedCatId);
+    const logNote = `Resisted ${selectedCategory?.name || "Impulse Buy"}`;
+
+    await logTransaction(amountStr, selectedCatId, selectedWalletId, logNote);
     setIsSubmitting(false);
     handleClose();
   };
@@ -69,9 +71,11 @@ export default function QuickLogModal() {
       <View className={`flex-row items-center justify-between pb-3 border-b ${isDark ? "border-[#303336]" : "border-stone-200"}`}>
         <View className="flex-row items-center gap-2">
           <View className="h-7 w-7 rounded-lg bg-[#AF2219] items-center justify-center shadow-xs">
-            <MaterialIcons name="flash-on" size={16} color="#FFFFFF" />
+            <MaterialIcons name="shield" size={16} color="#FFFFFF" />
           </View>
-          <Text className={`text-base font-black ${isDark ? "text-white" : "text-stone-900"}`}>3-Sec Quick Log</Text>
+          <Text className={`text-base font-black ${isDark ? "text-white" : "text-stone-900"}`}>
+            Log Resisted Impulse (Savings)
+          </Text>
         </View>
         <Pressable
           onPress={handleClose}
@@ -84,7 +88,7 @@ export default function QuickLogModal() {
       {/* Amount Display */}
       <View className="py-4 items-center">
         <Text className="text-[10px] font-black uppercase tracking-widest text-[#AF2219] mb-1">
-          Amount to Log & Strike
+          Money Saved (Deals Cleave Damage)
         </Text>
         <View className="flex-row items-baseline gap-1.5">
           <Text className={`text-2xl font-black ${isDark ? "text-stone-500" : "text-stone-400"}`}>PHP</Text>
@@ -97,7 +101,7 @@ export default function QuickLogModal() {
       {/* 1-Tap Category Selector */}
       <View className="mb-3">
         <Text className={`text-[11px] font-bold uppercase tracking-wider mb-2 ${isDark ? "text-stone-400" : "text-stone-500"}`}>
-          Select Category
+          Temptation Resisted
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
           {categories.map((c) => {
@@ -130,10 +134,10 @@ export default function QuickLogModal() {
         </ScrollView>
       </View>
 
-      {/* Wallet Switcher */}
+      {/* Vault Destination Selector */}
       <View className="mb-4">
         <Text className={`text-[11px] font-bold uppercase tracking-wider mb-2 ${isDark ? "text-stone-400" : "text-stone-500"}`}>
-          Payment Source
+          Savings Vault Destination
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
           {wallets.map((w) => {
@@ -195,7 +199,7 @@ export default function QuickLogModal() {
       {/* Strike Action Button */}
       <View className="mb-4">
         <Continue
-          title={`⚔️ Strike Boss (PHP ${amountStr})`}
+          title={`⚔️ Unleash Savings Strike (₱${amountStr})`}
           disabled={parseFloat(amountStr) <= 0}
           loading={isSubmitting}
           onPress={handleStrike}
