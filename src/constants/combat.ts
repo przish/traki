@@ -43,4 +43,40 @@ export const COMBAT_CONFIG = {
     WEEKLY_PROPORTION: 0.35, // 35% of damage
     MONTHLY_PROPORTION: 0.15, // 15% of damage
   } as const,
+
+  // Instant Quick Savings Strikes (₱ saved directly deals combat damage)
+  QUICK_STRIKES: [
+    {
+      amount: 50,
+      label: "Passed Coffee / Snacks",
+      title: "₱50 Strike",
+      subtitle: "Coffee Pass",
+      icon: "coffee",
+    },
+    {
+      amount: 150,
+      label: "Skipped Takeout / Delivery",
+      title: "₱150 Strike",
+      subtitle: "Takeout Pass",
+      icon: "silverware-fork-knife",
+    },
+    {
+      amount: 500,
+      label: "Resisted Impulse Online Buy",
+      title: "₱500 Strike",
+      subtitle: "Impulse Block",
+      icon: "cart-off",
+    },
+  ] as const,
+
+  // 16-Bit Frame-by-Frame Sprite Animation Engine Constants (Julia's Mathematical Model)
+  SPRITE_ANIMATION: {
+    IDLE_FRAME_MS: 160, // Classic retro pacing for breathing/stance loops (~6.25 FPS)
+    ATTACK_FRAME_MS: 85, // High-speed strike frame timing (~12 FPS)
+    HURT_FRAME_MS: 260, // Flinch/recoil reaction duration
+    SLASH_FX_FRAME_MS: 65, // Dynamic energy blade arc progression (~15 FPS)
+    TOTAL_IDLE_FRAMES: 4,
+    TOTAL_ATTACK_FRAMES: 4,
+    TOTAL_SLASH_FRAMES: 3,
+  } as const,
 } as const;
