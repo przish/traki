@@ -79,4 +79,24 @@ export const COMBAT_CONFIG = {
     TOTAL_ATTACK_FRAMES: 4,
     TOTAL_SLASH_FRAMES: 3,
   } as const,
+
+  // Event-Driven Combat Animation Physics & Timings (Julia's 60 FPS Model)
+  ANIMATION_PHYSICS: {
+    WINDUP_MS: 70,
+    LUNGE_MS: 120,
+    IMPACT_DELAY_MS: 190, // WINDUP_MS + LUNGE_MS
+    HIT_STUN_MS: 260,
+    RECOVERY_SPRING_TENSION: 85,
+    RECOVERY_SPRING_FRICTION: 4.5,
+    POPUP_DURATION_MS: 1600,
+    SHAKE_DURATION_MS: 35,
+  } as const,
+
+  // Combo Chain Engine (Rapid Transaction Queuing)
+  COMBO_CONFIG: {
+    COMBO_WINDOW_MS: 1600, // Maximum ms between hits to sustain and advance combo
+    COMBO_BONUS_STEP: 0.05, // +5% bonus damage per combo stack
+    MAX_COMBO_COUNT: 10,
+    MAX_COMBO_MULTIPLIER: 1.5,
+  } as const,
 } as const;

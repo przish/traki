@@ -1,38 +1,61 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   Pressable,
   Animated,
-  Easing,
   StyleSheet,
   Image,
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import * as Haptics from "expo-haptics";
 import Svg, { Defs, LinearGradient, Stop, Circle } from "react-native-svg";
 import { BossEncounter, CombatStrikeResult, PlayerProfile } from "@/src/types";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { THEME_CONFIG } from "@/src/constants/theme";
 import { COMBAT_CONFIG } from "@/src/constants/combat";
+import { useCombatAnimationController } from "./useCombatAnimationController";
 
-// 16-Bit JRPG Pixel Art Frame Sprites
-const SPRITE_HERO_IDLE = require("@/assets/images/sprites/hero.jpg");
-const SPRITE_HERO_ATTACK_1 = require("@/assets/images/sprites/hero_attack_1.jpg");
-const SPRITE_HERO_ATTACK_2 = require("@/assets/images/sprites/hero_attack_2.jpg");
+// ─── 16-BIT JRPG PIXEL ART TRANSPARENT FRAME SEQUENCES ───
+// Hero Idle Animation (4 frames in continuous breathing loop)
+const HERO_IDLE_FRAMES = [
+  require("@/assets/images/sprites/hero_idle_0.png"),
+  require("@/assets/images/sprites/hero_idle_1.png"),
+  require("@/assets/images/sprites/hero_idle_2.png"),
+  require("@/assets/images/sprites/hero_idle_3.png"),
+];
+// Hero Attack Animation Frames
+const HERO_ATTACK_WINDUP = require("@/assets/images/sprites/hero_attack_0.png");
+const HERO_ATTACK_SLASH = require("@/assets/images/sprites/hero_attack_1.png");
 
-const SPRITE_DAILY_IMP_IDLE = require("@/assets/images/sprites/daily_imp.jpg");
-const SPRITE_DAILY_IMP_HURT = require("@/assets/images/sprites/daily_imp_hurt.jpg");
+// Boss Encounter Frames (Idle breathing loop + Hurt recoil reaction)
+const MOB_FRAMES = {
+  daily: {
+    idle: [
+      require("@/assets/images/sprites/daily_imp_idle_0.png"),
+      require("@/assets/images/sprites/daily_imp_idle_1.png"),
+    ],
+    hurt: require("@/assets/images/sprites/daily_imp_hurt.png"),
+  },
+  weekly: {
+    idle: [
+      require("@/assets/images/sprites/phantom_idle_0.png"),
+      require("@/assets/images/sprites/phantom_idle_1.png"),
+    ],
+    hurt: require("@/assets/images/sprites/phantom_hurt.png"),
+  },
+  monthly: {
+    idle: [
+      require("@/assets/images/sprites/titan_idle_0.png"),
+      require("@/assets/images/sprites/titan_idle_1.png"),
+    ],
+    hurt: require("@/assets/images/sprites/titan_hurt.png"),
+  },
+};
 
-const SPRITE_WEEKLY_PHANTOM_IDLE = require("@/assets/images/sprites/weekly_phantom.jpg");
-const SPRITE_WEEKLY_PHANTOM_HURT = require("@/assets/images/sprites/phantom_hurt.jpg");
-
-const SPRITE_MONTHLY_TITAN_IDLE = require("@/assets/images/sprites/monthly_titan.jpg");
-const SPRITE_MONTHLY_TITAN_HURT = require("@/assets/images/sprites/titan_hurt.jpg");
-
-const SPRITE_SLASH_CRESCENT = require("@/assets/images/sprites/slash_fx.jpg");
-const SPRITE_SLASH_BURST = require("@/assets/images/sprites/slash_burst.jpg");
+// Combat Visual FX Frames
+const SPRITE_SLASH_CRESCENT = require("@/assets/images/sprites/slash_crescent.png");
+const SPRITE_SLASH_BURST = require("@/assets/images/sprites/slash_burst.png");
 
 export interface BattlefieldArenaProps {
   boss: BossEncounter;
@@ -47,19 +70,6 @@ export interface BattlefieldArenaProps {
   isStriking?: boolean;
 }
 
-interface FloatingPopup {
-  id: string;
-  damageText: string;
-  lootText?: string;
-  isCrit: boolean;
-  animY: Animated.Value;
-  animOpacity: Animated.Value;
-}
-
-type HeroAnimState = "idle" | "windup" | "slash";
-type MobAnimState = "idle" | "hurt";
-type SlashAnimState = "none" | "crescent" | "burst";
-
 export default function BattlefieldArena({
   boss,
   profile,
@@ -70,325 +80,52 @@ export default function BattlefieldArena({
 }: BattlefieldArenaProps) {
   const isDark = useColorScheme() === "dark";
 
-  // Animation values (React 19 compiler compliant)
-  const [heroTranslateX] = useState(() => new Animated.Value(0));
-  const [heroTranslateY] = useState(() => new Animated.Value(0));
-  const [heroScale] = useState(() => new Animated.Value(1));
-  const [heroRotate] = useState(() => new Animated.Value(0));
+  // Event-Driven 60 FPS Combat Animation Controller
+  const {
+    playerState,
+    targetState,
+    slashState,
+    comboCount,
+    popups,
+    playerTranslateX,
+    playerTranslateY,
+    playerScale,
+    playerRotate,
+    targetTranslateX,
+    targetTranslateY,
+    targetScale,
+    targetFlashOpacity,
+    slashOpacity,
+    slashScale,
+    slashRotate,
+    coinTranslateY,
+    coinOpacity,
+    stageShakeX,
+  } = useCombatAnimationController({
+    activeTier,
+  });
 
-  const [mobTranslateX] = useState(() => new Animated.Value(0));
-  const [mobTranslateY] = useState(() => new Animated.Value(0));
-  const [mobScale] = useState(() => new Animated.Value(1));
-  const [mobFlashOpacity] = useState(() => new Animated.Value(0));
+  // ─── ACTIVE FRAME INDEXES FOR CONTINUOUS FRAME-BY-FRAME ANIMATION ───
+  const [heroIdleFrameIndex, setHeroIdleFrameIndex] = useState(0);
+  const [mobIdleFrameIndex, setMobIdleFrameIndex] = useState(0);
 
-  const [slashOpacity] = useState(() => new Animated.Value(0));
-  const [slashScale] = useState(() => new Animated.Value(0.4));
-  const [slashRotate] = useState(() => new Animated.Value(0));
-
-  const [coinTranslateY] = useState(() => new Animated.Value(0));
-  const [coinOpacity] = useState(() => new Animated.Value(0));
-
-  const [stageShakeX] = useState(() => new Animated.Value(0));
-  const [hpCleaveAnim] = useState(() => new Animated.Value(boss.current_hp));
-
-  // Frame-by-frame sprite state machine
-  const [heroAnimState, setHeroAnimState] = useState<HeroAnimState>("idle");
-  const [mobAnimState, setMobAnimState] = useState<MobAnimState>("idle");
-  const [slashAnimState, setSlashAnimState] = useState<SlashAnimState>("none");
-
-  const [popups, setPopups] = useState<FloatingPopup[]>([]);
-  const [animatingStrike, setAnimatingStrike] = useState(false);
-
-  // Active timers tracking for safe cleanup (Janitor anti-leak standard)
-  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-
+  // Hero Idle Frame Loop (4-frame cycle at retro FPS)
   useEffect(() => {
-    return () => {
-      timeoutsRef.current.forEach(clearTimeout);
-      timeoutsRef.current = [];
-    };
-  }, []);
+    if (playerState !== "IDLE") return;
+    const interval = setInterval(() => {
+      setHeroIdleFrameIndex((prev) => (prev + 1) % HERO_IDLE_FRAMES.length);
+    }, COMBAT_CONFIG.SPRITE_ANIMATION.IDLE_FRAME_MS);
+    return () => clearInterval(interval);
+  }, [playerState]);
 
-  // Idle floating animation loops
+  // Mob Idle Frame Loop (2-frame cycle)
   useEffect(() => {
-    const heroIdle = Animated.loop(
-      Animated.sequence([
-        Animated.timing(heroTranslateY, {
-          toValue: -5,
-          duration: 1200,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(heroTranslateY, {
-          toValue: 0,
-          duration: 1200,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    const mobIdle = Animated.loop(
-      Animated.sequence([
-        Animated.timing(mobTranslateY, {
-          toValue: -7,
-          duration: 1400,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(mobTranslateY, {
-          toValue: 2,
-          duration: 1400,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    heroIdle.start();
-    mobIdle.start();
-
-    return () => {
-      heroIdle.stop();
-      mobIdle.stop();
-    };
-  }, [heroTranslateY, mobTranslateY]);
-
-  // HP Bar sync
-  useEffect(() => {
-    Animated.timing(hpCleaveAnim, {
-      toValue: boss.current_hp,
-      duration: 500,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-    }).start();
-  }, [boss.current_hp, hpCleaveAnim]);
-
-  // Trigger full attack animation sequence with frame-by-frame sprite progression
-  const playAttackAnimation = useCallback(
-    (strikeResult?: CombatStrikeResult, customLabel?: string) => {
-      setAnimatingStrike(true);
-
-      const isCrit = strikeResult?.isCrit ?? false;
-      const dmg = strikeResult?.totalDamage ?? 100;
-      const gold = strikeResult?.goldEarned ?? Math.round(dmg * 0.5);
-      const exp = strikeResult?.expEarned ?? Math.round(dmg * 0.25);
-      const trk = activeTier === "daily" ? 2 : activeTier === "weekly" ? 15 : 50;
-
-      const animY = new Animated.Value(0);
-      const animOpacity = new Animated.Value(1);
-
-      const newPopup: FloatingPopup = {
-        id: `pop_${Date.now()}_${Math.random()}`,
-        damageText: isCrit ? `💥 CRIT! -${dmg} HP` : `⚔️ -${dmg} HP`,
-        lootText: `+${gold} Gold • +${exp} EXP • +${trk} TRK`,
-        isCrit,
-        animY,
-        animOpacity,
-      };
-      setPopups((prev) => [...prev.slice(-2), newPopup]);
-
-      // Animate popup upward drift and fade
-      Animated.parallel([
-        Animated.timing(animY, {
-          toValue: -32,
-          duration: 1300,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(animOpacity, {
-          toValue: 0,
-          duration: 1300,
-          delay: 350,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      // Stage camera shake
-      Animated.sequence([
-        Animated.timing(stageShakeX, { toValue: isCrit ? -8 : -5, duration: 35, useNativeDriver: true }),
-        Animated.timing(stageShakeX, { toValue: isCrit ? 8 : 5, duration: 35, useNativeDriver: true }),
-        Animated.timing(stageShakeX, { toValue: isCrit ? -5 : -3, duration: 35, useNativeDriver: true }),
-        Animated.timing(stageShakeX, { toValue: isCrit ? 5 : 3, duration: 35, useNativeDriver: true }),
-        Animated.timing(stageShakeX, { toValue: 0, duration: 35, useNativeDriver: true }),
-      ]).start();
-
-      // Coin burst particles
-      coinTranslateY.setValue(0);
-      coinOpacity.setValue(1);
-      Animated.parallel([
-        Animated.timing(coinTranslateY, {
-          toValue: -40,
-          duration: 600,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(coinOpacity, {
-          toValue: 0,
-          duration: 600,
-          delay: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      // ─── FRAME-BY-FRAME SPRITE TIMELINE (Julia's Mathematical Model) ───
-      // 1. Frame 1: Wind-up (Hero pulls blade over shoulder into power stance)
-      setHeroAnimState("windup");
-
-      // 2. Frame 2: Forward Dash & Full Cleave (Hero swings greatsword with motion trail)
-      const t1 = setTimeout(() => {
-        setHeroAnimState("slash");
-      }, COMBAT_CONFIG.SPRITE_ANIMATION.ATTACK_FRAME_MS);
-
-      // 3. Impact Moment (Slash FX frames + Mob Hurt frame)
-      const t2 = setTimeout(() => {
-        // Slash Frame 1: Crescent blade
-        setSlashAnimState("crescent");
-        // Mob switches to Hurt/Flinch reaction frame
-        setMobAnimState("hurt");
-
-        // Slash Frame 2: Explosive burst shockwave
-        const t3 = setTimeout(() => {
-          setSlashAnimState("burst");
-        }, COMBAT_CONFIG.SPRITE_ANIMATION.SLASH_FX_FRAME_MS);
-
-        // End Slash FX
-        const t4 = setTimeout(() => {
-          setSlashAnimState("none");
-        }, COMBAT_CONFIG.SPRITE_ANIMATION.SLASH_FX_FRAME_MS * 2.5);
-
-        // Mob recovers from hurt flinch back to idle stance
-        const t5 = setTimeout(() => {
-          setMobAnimState("idle");
-        }, COMBAT_CONFIG.SPRITE_ANIMATION.HURT_FRAME_MS);
-
-        timeoutsRef.current.push(t3, t4, t5);
-      }, 190);
-
-      timeoutsRef.current.push(t1, t2);
-
-      // ─── TRANSLATION & RECOIL SEQUENCING ───
-      Animated.sequence([
-        // Wind-up: pull back slightly
-        Animated.parallel([
-          Animated.timing(heroTranslateX, {
-            toValue: -10,
-            duration: 70,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(heroScale, {
-            toValue: 0.95,
-            duration: 70,
-            useNativeDriver: true,
-          }),
-        ]),
-        // Forward Dash & Lunge
-        Animated.parallel([
-          Animated.timing(heroTranslateX, {
-            toValue: 100,
-            duration: 130,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
-          }),
-          Animated.timing(heroScale, {
-            toValue: 1.25,
-            duration: 130,
-            useNativeDriver: true,
-          }),
-          Animated.timing(heroRotate, {
-            toValue: 1,
-            duration: 130,
-            useNativeDriver: true,
-          }),
-        ]),
-        // Impact moment: Slash FX burst & Mob recoils
-        Animated.parallel([
-          Animated.sequence([
-            Animated.timing(slashOpacity, { toValue: 1, duration: 40, useNativeDriver: true }),
-            Animated.timing(slashScale, { toValue: 1.5, duration: 160, useNativeDriver: true }),
-            Animated.timing(slashOpacity, { toValue: 0, duration: 100, useNativeDriver: true }),
-          ]),
-          Animated.timing(slashRotate, { toValue: 1, duration: 250, useNativeDriver: true }),
-          // Mob hit recoil & white flash
-          Animated.sequence([
-            Animated.parallel([
-              Animated.timing(mobTranslateX, { toValue: 24, duration: 55, useNativeDriver: true }),
-              Animated.timing(mobFlashOpacity, { toValue: 0.9, duration: 55, useNativeDriver: true }),
-              Animated.timing(mobScale, { toValue: 0.88, duration: 55, useNativeDriver: true }),
-            ]),
-            Animated.parallel([
-              Animated.timing(mobTranslateX, { toValue: -8, duration: 75, useNativeDriver: true }),
-              Animated.timing(mobFlashOpacity, { toValue: 0, duration: 110, useNativeDriver: true }),
-            ]),
-            Animated.timing(mobTranslateX, { toValue: 0, duration: 110, useNativeDriver: true }),
-            Animated.timing(mobScale, { toValue: 1, duration: 110, useNativeDriver: true }),
-          ]),
-        ]),
-        // Spring back to origin stance
-        Animated.parallel([
-          Animated.spring(heroTranslateX, {
-            toValue: 0,
-            friction: 4.5,
-            tension: 85,
-            useNativeDriver: true,
-          }),
-          Animated.spring(heroScale, {
-            toValue: 1,
-            friction: 5,
-            useNativeDriver: true,
-          }),
-          Animated.timing(heroRotate, {
-            toValue: 0,
-            duration: 150,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]).start(() => {
-        slashScale.setValue(0.4);
-        slashRotate.setValue(0);
-        setHeroAnimState("idle");
-        setAnimatingStrike(false);
-      });
-
-      // Clear popup after duration
-      const tPop = setTimeout(() => {
-        setPopups((prev) => prev.filter((p) => p.id !== newPopup.id));
-      }, 1700);
-      timeoutsRef.current.push(tPop);
-    },
-    [
-      heroTranslateX,
-      heroScale,
-      heroRotate,
-      slashOpacity,
-      slashScale,
-      slashRotate,
-      mobTranslateX,
-      mobFlashOpacity,
-      mobScale,
-      stageShakeX,
-      coinTranslateY,
-      coinOpacity,
-      activeTier,
-    ]
-  );
-
-  const handleQuickStrikeAction = async (amount: number, label: string, catId?: string) => {
-    if (animatingStrike || isStriking) return;
-
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    } catch {}
-
-    const res = await onExecuteSavingsStrike(amount, label, catId);
-    if (res) {
-      playAttackAnimation(res, label);
-    } else {
-      playAttackAnimation(undefined, label);
-    }
-  };
+    if (targetState !== "IDLE") return;
+    const interval = setInterval(() => {
+      setMobIdleFrameIndex((prev) => (prev + 1) % 2);
+    }, COMBAT_CONFIG.SPRITE_ANIMATION.IDLE_FRAME_MS * 2);
+    return () => clearInterval(interval);
+  }, [targetState]);
 
   const hpPercent = Math.max(
     0,
@@ -397,16 +134,17 @@ export default function BattlefieldArena({
 
   const isBossDefeated = boss.current_hp <= 0;
 
-  // Frame Sprite Selectors based on dynamic animation states
+  // Frame Sprite Selectors
   const getHeroSprite = () => {
-    switch (heroAnimState) {
-      case "windup":
-        return SPRITE_HERO_ATTACK_1;
-      case "slash":
-        return SPRITE_HERO_ATTACK_2;
-      case "idle":
+    switch (playerState) {
+      case "WINDUP":
+        return HERO_ATTACK_WINDUP;
+      case "STRIKE":
+      case "FOLLOW_THROUGH":
+        return HERO_ATTACK_SLASH;
+      case "IDLE":
       default:
-        return SPRITE_HERO_IDLE;
+        return HERO_IDLE_FRAMES[heroIdleFrameIndex] || HERO_IDLE_FRAMES[0];
     }
   };
 
@@ -414,8 +152,7 @@ export default function BattlefieldArena({
     switch (activeTier) {
       case "daily":
         return {
-          idleSprite: SPRITE_DAILY_IMP_IDLE,
-          hurtSprite: SPRITE_DAILY_IMP_HURT,
+          frames: MOB_FRAMES.daily,
           badge: "DAILY IMPULSE MOB",
           color: THEME_CONFIG.COLORS.TIER.DAILY,
           glow: `${THEME_CONFIG.COLORS.TIER.DAILY}30`,
@@ -424,8 +161,7 @@ export default function BattlefieldArena({
         };
       case "weekly":
         return {
-          idleSprite: SPRITE_WEEKLY_PHANTOM_IDLE,
-          hurtSprite: SPRITE_WEEKLY_PHANTOM_HURT,
+          frames: MOB_FRAMES.weekly,
           badge: "WEEKLY SUBSCRIPTION PHANTOM",
           color: THEME_CONFIG.COLORS.TIER.WEEKLY,
           glow: `${THEME_CONFIG.COLORS.TIER.WEEKLY}30`,
@@ -434,8 +170,7 @@ export default function BattlefieldArena({
         };
       case "monthly":
         return {
-          idleSprite: SPRITE_MONTHLY_TITAN_IDLE,
-          hurtSprite: SPRITE_MONTHLY_TITAN_HURT,
+          frames: MOB_FRAMES.monthly,
           badge: "MONTHLY INFLATION TITAN",
           color: THEME_CONFIG.COLORS.TIER.MONTHLY,
           glow: `${THEME_CONFIG.COLORS.TIER.MONTHLY}30`,
@@ -446,17 +181,24 @@ export default function BattlefieldArena({
   };
 
   const mobTheme = getMobTheme();
-  const currentMobSprite = mobAnimState === "hurt" ? mobTheme.hurtSprite : mobTheme.idleSprite;
+  const currentMobSprite =
+    targetState === "HURT" || targetState === "HIT_STUN"
+      ? mobTheme.frames.hurt
+      : mobTheme.frames.idle[mobIdleFrameIndex] || mobTheme.frames.idle[0];
 
   const getSlashSprite = () => {
-    switch (slashAnimState) {
-      case "crescent":
+    switch (slashState) {
+      case "CRESCENT":
         return SPRITE_SLASH_CRESCENT;
-      case "burst":
+      case "BURST":
         return SPRITE_SLASH_BURST;
       default:
         return null;
     }
+  };
+
+  const handleQuickStrikeAction = async (amount: number, label: string, catId?: string) => {
+    await onExecuteSavingsStrike(amount, label, catId);
   };
 
   return (
@@ -483,20 +225,32 @@ export default function BattlefieldArena({
           </Text>
         </View>
 
-        <View
-          style={{
-            backgroundColor: THEME_CONFIG.COLORS.BRAND_TINT_15,
-            borderColor: THEME_CONFIG.COLORS.BRAND_TINT_30,
-          }}
-          className="flex-row items-center gap-1 px-2.5 py-1 rounded-full border"
-        >
-          <MaterialIcons name="shield" size={12} color={THEME_CONFIG.COLORS.BRAND} />
-          <Text
-            style={{ color: THEME_CONFIG.COLORS.BRAND }}
-            className="text-[10px] font-black"
+        <View className="flex-row items-center gap-2">
+          {/* Active Combo Multiplier Pill */}
+          {comboCount > 1 && (
+            <View className="flex-row items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/40">
+              <MaterialIcons name="local-fire-department" size={12} color="#F59E0B" />
+              <Text className="text-[10px] font-black text-amber-500">
+                {comboCount}x COMBO
+              </Text>
+            </View>
+          )}
+
+          <View
+            style={{
+              backgroundColor: THEME_CONFIG.COLORS.BRAND_TINT_15,
+              borderColor: THEME_CONFIG.COLORS.BRAND_TINT_30,
+            }}
+            className="flex-row items-center gap-1 px-2.5 py-1 rounded-full border"
           >
-            {profile?.current_streak ?? 1}x Multiplier
-          </Text>
+            <MaterialIcons name="shield" size={12} color={THEME_CONFIG.COLORS.BRAND} />
+            <Text
+              style={{ color: THEME_CONFIG.COLORS.BRAND }}
+              className="text-[10px] font-black"
+            >
+              {profile?.current_streak ?? 1}x Multiplier
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -531,7 +285,7 @@ export default function BattlefieldArena({
         })}
       </View>
 
-      {/* ─── 2D BATTLEFIELD STAGE ─── */}
+      {/* ─── 2D BATTLEFIELD STAGE VIEWPORT ─── */}
       <View
         className={`h-72 rounded-2xl border relative overflow-hidden justify-between p-4 ${
           isDark ? "bg-[#0A0B0D] border-[#222428]" : "bg-[#FAF7F5] border-[#E7E1DE]"
@@ -612,17 +366,17 @@ export default function BattlefieldArena({
           </View>
         </View>
 
-        {/* ─── LIVE COMBATANTS LAYER (HERO VS MOB WITH FRAME-BY-FRAME SPRITES) ─── */}
+        {/* ─── LIVE COMBATANTS LAYER (HERO VS MOB WITH TRANSPARENT FRAME-BY-FRAME SPRITES) ─── */}
         <View className="flex-1 flex-row items-center justify-between px-6 z-10 relative">
-          {/* 1. HERO CHARACTER (ANIMATED SPRITE FRAMES) */}
+          {/* 1. HERO CHARACTER (LEFT SIDE) */}
           <Animated.View
             style={{
               transform: [
-                { translateX: heroTranslateX },
-                { translateY: heroTranslateY },
-                { scale: heroScale },
+                { translateX: playerTranslateX },
+                { translateY: playerTranslateY },
+                { scale: playerScale },
                 {
-                  rotate: heroRotate.interpolate({
+                  rotate: playerRotate.interpolate({
                     inputRange: [0, 1],
                     outputRange: ["0deg", "12deg"],
                   }),
@@ -631,35 +385,18 @@ export default function BattlefieldArena({
             }}
             className="items-center"
           >
-            <View className="relative items-center justify-center">
-              {/* Dynamic Sprite Frame */}
-              <View
-                style={{ borderColor: THEME_CONFIG.COLORS.BRAND }}
-                className="w-20 h-20 rounded-2xl overflow-hidden border-2 shadow-lg bg-stone-900 items-center justify-center"
-              >
-                <Image
-                  source={getHeroSprite()}
-                  style={{ width: "100%", height: "100%" }}
-                  resizeMode="cover"
-                />
-              </View>
+            <View className="relative items-center justify-end w-28 h-28">
+              {/* Unboxed Transparent Sprite with Frame-by-Frame Action */}
+              <Image
+                source={getHeroSprite()}
+                style={{ width: "100%", height: "100%" }}
+                resizeMode="contain"
+              />
 
-              {/* Action State Indicator Spark */}
+              {/* Ground Shadow Pedestal */}
               <View
-                style={{ backgroundColor: THEME_CONFIG.COLORS.BRAND }}
-                className="absolute -top-1 -right-1 w-5 h-5 rounded-full border border-white items-center justify-center shadow-md"
-              >
-                <MaterialIcons
-                  name={heroAnimState === "slash" ? "flash-on" : heroAnimState === "windup" ? "shield" : "offline-bolt"}
-                  size={11}
-                  color="white"
-                />
-              </View>
-
-              {/* Battle Pedestal Base Shadow */}
-              <View
-                style={{ backgroundColor: THEME_CONFIG.COLORS.BRAND_TINT_40 }}
-                className="w-16 h-2 rounded-full mt-1.5 self-center"
+                style={{ backgroundColor: THEME_CONFIG.COLORS.BRAND_TINT_30 }}
+                className="w-16 h-2 rounded-full -mt-1 self-center"
               />
             </View>
 
@@ -670,14 +407,14 @@ export default function BattlefieldArena({
             </View>
           </Animated.View>
 
-          {/* 2. CENTER SLASH IMPACT SPRITE (FRAME-BY-FRAME) & COIN PARTICLES */}
-          {slashAnimState !== "none" && (
+          {/* 2. CENTER SLASH IMPACT SPRITE & COIN PARTICLES */}
+          {slashState !== "NONE" && (
             <Animated.View
               pointerEvents="none"
               style={{
                 position: "absolute",
-                right: 38,
-                top: "16%",
+                right: 32,
+                top: "14%",
                 opacity: slashOpacity,
                 transform: [
                   { scale: slashScale },
@@ -689,7 +426,7 @@ export default function BattlefieldArena({
                   },
                 ],
               }}
-              className="w-32 h-32 z-30 items-center justify-center rounded-2xl overflow-hidden"
+              className="w-36 h-36 z-30 items-center justify-center pointer-events-none"
             >
               <Image
                 source={getSlashSprite()!}
@@ -715,33 +452,28 @@ export default function BattlefieldArena({
             <Text className="text-xs font-black text-amber-300 shadow-md">+💰</Text>
           </Animated.View>
 
-          {/* 3. MOB / IMPULSE BOSS SPRITE (IDLE VS HURT FRAME) */}
+          {/* 3. MOB / TARGET SPRITE (RIGHT SIDE) */}
           <Animated.View
             style={{
               transform: [
-                { translateX: mobTranslateX },
-                { translateY: mobTranslateY },
-                { scale: mobScale },
+                { translateX: targetTranslateX },
+                { translateY: targetTranslateY },
+                { scale: targetScale },
               ],
             }}
             className="items-center"
           >
-            <View className="relative items-center justify-center">
-              {/* Monster Frame with Dynamic Sprite Swap */}
-              <View
+            <View className="relative items-center justify-end w-28 h-28">
+              {/* Unboxed Transparent Mob with Frame-by-Frame Action */}
+              <Image
+                source={currentMobSprite}
                 style={{
-                  borderColor: mobAnimState === "hurt" ? THEME_CONFIG.COLORS.ERROR : mobTheme.color,
+                  width: "100%",
+                  height: "100%",
+                  opacity: isBossDefeated ? 0.35 : 1.0,
                 }}
-                className={`w-22 h-22 rounded-2xl overflow-hidden border-2 shadow-lg bg-stone-950 items-center justify-center ${
-                  isBossDefeated ? "opacity-35" : "opacity-100"
-                }`}
-              >
-                <Image
-                  source={currentMobSprite}
-                  style={{ width: "100%", height: "100%" }}
-                  resizeMode="cover"
-                />
-              </View>
+                resizeMode="contain"
+              />
 
               {/* Hit Flash Overlay */}
               <Animated.View
@@ -753,15 +485,15 @@ export default function BattlefieldArena({
                   right: 0,
                   bottom: 0,
                   backgroundColor: "#FFFFFF",
-                  opacity: mobFlashOpacity,
-                  borderRadius: 16,
+                  opacity: targetFlashOpacity,
+                  borderRadius: 20,
                 }}
               />
 
-              {/* Battle Pedestal Base Shadow */}
+              {/* Ground Shadow Pedestal */}
               <View
                 style={{ backgroundColor: mobTheme.glow }}
-                className="w-18 h-2 rounded-full mt-1.5 self-center"
+                className="w-18 h-2 rounded-full -mt-1 self-center"
               />
             </View>
 
@@ -874,7 +606,7 @@ export default function BattlefieldArena({
           {COMBAT_CONFIG.QUICK_STRIKES.map((strike) => (
             <Pressable
               key={strike.amount}
-              disabled={animatingStrike}
+              disabled={isStriking}
               onPress={() => handleQuickStrikeAction(strike.amount, strike.label)}
               className={`flex-1 py-3 px-2 rounded-2xl border items-center justify-center active:scale-95 transition-transform ${
                 isDark ? "bg-[#1B1D1F] border-[#303336]" : "bg-white border-[#E7E1DE]"
